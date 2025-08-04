@@ -11,6 +11,15 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 
+// CORS
+builder.Services.AddCors(opts =>
+    opts.AddPolicy("AllowAngularDevClient", policy =>
+        policy.WithOrigins("http://localhost:4200")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+    ));
+
+
 
 // Add services to the container.
 
@@ -89,6 +98,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseRouting();
+app.UseCors("AllowAngularDevClient");
 app.UseAuthentication();
 app.UseAuthorization();
 

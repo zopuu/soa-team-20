@@ -27,8 +27,8 @@
     <mat-form-field appearance="fill">
       <mat-label>Role</mat-label>
       <mat-select formControlName="role">
-        <mat-option value="Vodič">Guide</mat-option>
-        <mat-option value="Turista">Tourist</mat-option>
+        <mat-option value="Guide">Guide</mat-option>
+        <mat-option value="Tourist">Tourist</mat-option>
       </mat-select>
       <mat-error *ngIf="registrationForm.get('role')?.hasError('required')">
         Please select a role
@@ -38,10 +38,6 @@
       <mat-form-field appearance="fill">
         <mat-label>Password</mat-label>
         <input matInput type="password" formControlName="password" type="password" />
-        <mat-error *ngIf="registrationForm.get('password')?.hasError('minlength')">
-          Minimum 8 characters
-        </mat-error>
-        
       </mat-form-field>
       <mat-form-field appearance="fill">
         <mat-label>Confirm Password</mat-label>
