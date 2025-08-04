@@ -87,6 +87,24 @@ builder.Services.AddSwaggerGen(c => {
 });
 
 var app = builder.Build();
+// apply any pending migrations
+using (var scope = app.Services.CreateScope()) {
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var max = 10;
+    var wait = TimeSpan.FromSeconds(5);
+
+    for (int i = 0; i < max; i++) {
+        try {
+            db.Database.Migrate();
+            break; // success!
+        }
+        catch (Npgsql.NpgsqlException) {
+            if (i == max - 1) throw;     // re-throw after last try
+            Thread.Sleep(wait);           // wait then retry
+        }
+    }
+}
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
