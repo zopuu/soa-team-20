@@ -1,4 +1,23 @@
-﻿namespace AuthService.Models {
-    public class User {
-    }
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace AuthService.Models {
+    public class User
+    {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int Id { get; set; }
+
+        [Required, MaxLength(20)] public string Username { get; set; }
+
+        [Required, EmailAddress] public string Email { get; set; }
+
+        [Required] public string PasswordHash { get; set; }
+
+        [Required]
+        [RegularExpression("Guide|Tourist|Admin", ErrorMessage = "Role must be Guide, Tourist or Admin")]
+        public string Role { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+}
 }
