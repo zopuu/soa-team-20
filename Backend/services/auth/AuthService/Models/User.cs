@@ -18,6 +18,6 @@ namespace AuthService.Models {
         [RegularExpression("Guide|Tourist|Admin", ErrorMessage = "Role must be Guide, Tourist or Admin")]
         public string Role { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 }
 }

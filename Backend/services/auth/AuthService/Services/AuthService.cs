@@ -41,8 +41,17 @@ namespace AuthService.Services {
         public async Task<string> LoginAsync(LoginRequest dto)
         {
             var user = await _repo.GetByUsernameAsync(dto.Username);
-            if (user == null || BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
+            // 1) Handle “user not found”
+            if (user == null)
                 throw new UnauthorizedAccessException("Invalid credentials.");
+
+            // 2) Check the password once
+            var isValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
+
+            // 3) Throw only if the password is *not* valid
+            if (!isValid)
+                throw new UnauthorizedAccessException("Invalid credentials.");
+
             var claims = new List<Claim>()
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
