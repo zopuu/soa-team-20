@@ -8,6 +8,7 @@ dist/
 # .NET
 bin/
 obj/
+.vs/
 
 # Go
 **/vendor/

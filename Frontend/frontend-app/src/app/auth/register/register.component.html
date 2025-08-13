@@ -1,0 +1,62 @@
+<div class="content">
+    <form [formGroup]="registrationForm" (ngSubmit)="register()" class="form-style">
+      <h2>Sign Up</h2>
+  
+      <mat-form-field appearance="fill">
+        <mat-label>Username</mat-label>
+        <input matInput type="text" formControlName="username" />
+        <mat-error *ngIf="registrationForm.get('username')?.hasError('required')">
+          Username is required
+        </mat-error>
+        <mat-error class="form-error" *ngIf="registrationForm.get('username')?.hasError('usernameTaken')">
+          Username is already taken.
+        </mat-error>
+      </mat-form-field>
+      <!-- Email -->
+    <mat-form-field appearance="fill">
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="email" placeholder="you@example.com" />
+      <mat-error *ngIf="registrationForm.get('email')?.hasError('required')">
+        Email is required
+      </mat-error>
+      <mat-error *ngIf="registrationForm.get('email')?.hasError('email')">
+        Enter a valid email address
+      </mat-error>
+    </mat-form-field>
+    <!-- Role -->
+    <mat-form-field appearance="fill">
+      <mat-label>Role</mat-label>
+      <mat-select formControlName="role">
+        <mat-option value="Guide">Guide</mat-option>
+        <mat-option value="Tourist">Tourist</mat-option>
+      </mat-select>
+      <mat-error *ngIf="registrationForm.get('role')?.hasError('required')">
+        Please select a role
+      </mat-error>
+    </mat-form-field>
+  
+      <mat-form-field appearance="fill">
+        <mat-label>Password</mat-label>
+        <input matInput type="password" formControlName="password" type="password" />
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Confirm Password</mat-label>
+        <input matInput type="password" formControlName="confirmPassword" />
+        <mat-error *ngIf="registrationForm.get('confirmPassword')?.hasError('passwordMismatch')">
+          Passwords do not match
+        </mat-error>
+      </mat-form-field>
+
+      
+  
+      <button mat-raised-button color="primary" class="submit-button" type="submit" [disabled]="registrationForm.invalid">
+        Register
+      </button>
+  
+      <div class="dont-have-account">
+        <p class="less-visible">Already registered?</p>
+        <p class="sign-up"><a routerLink="/auth/login">Log in</a></p>
+      </div>
+    </form>
+  </div>
+  

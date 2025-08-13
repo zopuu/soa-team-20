@@ -1,0 +1,120 @@
+div {
+    width: 400px;
+    display:flex;
+    flex-direction: column;
+}
+
+p {
+    margin-top: 20px;
+}
+
+.form-style {
+    position: absolute; 
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+a {
+    color: #972230; 
+    text-decoration: none; 
+    margin-left: 0px;
+}
+
+a:hover {
+    text-decoration: underline; 
+}
+
+.dont-have-account {
+    display: inline; 
+    justify-content: space-between;
+    margin-top: 5px;
+}
+
+.less-visible{
+    display:inline;
+    float:left;
+    opacity: 70%;
+}
+
+.sign-up{
+    display:inline;
+    float:left;
+    margin-left: 20px;
+}
+/*********/
+.mat-form-field {
+    width: 100%;
+  }
+
+  
+
+  
+  .mat-form-field.mat-focused .mat-form-field-label {
+    color: #3498db; /* color for focused label */
+  }
+  
+  .mat-form-field-label {
+    transition: all 0.3s cubic-bezier(.64, .09, .08, 1);
+  }
+  .form-error{
+    align-self: center;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  /************** SUBMIT BUTTON******************/
+.submit-button {
+  padding: 10px 30px;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 25px;
+  color: white !important;
+  cursor: pointer;
+  overflow: hidden;
+  background: linear-gradient(270deg, #00dbde, #fc00ff, #00dbde);
+  background-size: 200% 100%;
+  background-position: left center;
+  transition: background-position 0.6s ease;
+}
+
+.submit-button:hover {
+  animation: slideLeftToRight 0.6s forwards;
+}
+
+@keyframes slideLeftToRight {
+  0% {
+      background-position: left center;
+  }
+  100% {
+      background-position: right center;
+  }
+}
+
+.submit-button:not(:hover) {
+  animation: slideRightToLeft 0.6s forwards;
+}
+
+@keyframes slideRightToLeft {
+  0% {
+      background-position: right center;
+  }
+  100% {
+      background-position: left center;
+  }
+}
+/*********************************************************/
+.content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  max-height: 100vh; 
+  box-sizing: border-box;
+  overflow-y: hidden;
+}
+h2{
+  text-align: center;
+  color: blue;
+  font-weight: bolder;
+}
