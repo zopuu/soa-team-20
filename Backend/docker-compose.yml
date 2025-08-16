@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.9'
 
 services:
   auth:
@@ -23,13 +23,26 @@ services:
     volumes:
       - auth_data:/var/lib/postgresql/data
 
-  blog:
+  blogservice:
     build:
       context: ./services/blog
       dockerfile: Dockerfile
-    image: blogservice:latest
+    container_name: blogService
     ports:
-      - "5010:8080"
+      - "5100:8080"
+    environment:
+      - MONGO_URI=mongodb://blogmongodb:27017
+    depends_on:
+      - blogmongodb
+
+  blogmongodb:
+    image: mongo:6
+    container_name: blogMongoDB
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+        - mongo-data:/data/db
 # placeholder for future services
 #  gateway:
 #    build: ./gateway
@@ -37,3 +50,4 @@ services:
 
 volumes:
   auth_data:
+  mongo-data:
