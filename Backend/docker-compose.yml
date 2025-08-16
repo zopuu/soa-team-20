@@ -23,6 +23,13 @@ services:
     volumes:
       - auth_data:/var/lib/postgresql/data
 
+  blog:
+    build:
+      context: ./services/blog
+      dockerfile: Dockerfile
+    image: blogservice:latest
+    ports:
+      - "5010:8080"
 # placeholder for future services
 #  gateway:
 #    build: ./gateway

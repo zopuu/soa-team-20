@@ -4,18 +4,22 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 
 type Comment struct {
-	ID             uuid.UUID `json:"id" gorm:"primaryKey;type:uuid;column:Id;"`
-	UserId         uuid.UUID `json:"userId" gorm:"column:UserId;type:uuid;not null"`
-	DateOfCreation time.Time `json:"dateOfCreation" gorm:"column:DateOfCreation;type:date"`
-	Text           string    `json:"text" gorm:"column:Text;type:varchar(255);not null"`
-	LastEdit       time.Time `json:"lastEdit" gorm:"column:LastEdit;type:date"`
+	ID             uuid.UUID `json:"id" bson:"_id,omitempty"`
+	UserId         uuid.UUID `json:"userId" bson:"user_id"`
+	DateOfCreation time.Time `json:"dateOfCreation" bson:"date_of_creation"`
+	Text           string    `json:"text" bson:"text"`
+	LastEdit       time.Time `json:"lastEdit" bson:"last_edit"`
 }
 
-func (comment *Comment) BeforeCreate(scope *gorm.DB) error {
-	comment.ID = uuid.New()
-	return nil
+func CreateNewComment(userId uuid.UUID, text string) Comment {
+	return Comment{
+		ID:             uuid.New(),
+		UserId:         userId,
+		DateOfCreation: time.Now(),
+		Text:           text,
+		LastEdit:       time.Now(),
+	}
 }
