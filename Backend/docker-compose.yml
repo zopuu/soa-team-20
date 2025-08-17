@@ -10,7 +10,7 @@ services:
       - "5000:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__DefaultConnection: "Host=auth-db;Port=5432;Database=auth;Username=postgres;Password=123"
+      ConnectionStrings__DefaultConnection: "Host=auth-db;Port=5432;Database=auth;Username=postgres;Password=password"
     depends_on:
       - auth-db
 
@@ -19,14 +19,34 @@ services:
     environment:
       POSTGRES_DB: auth
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 123
+      POSTGRES_PASSWORD: password
+    ports:
+    - "55432:5432"
     volumes:
       - auth_data:/var/lib/postgresql/data
 
-# placeholder for future services
-#  gateway:
-#    build: ./gateway
-#    ports: [...]
+# Go stakeholders service (no new DB)
+  stakeholders:
+    build:
+      context: ./services/stakeholders
+      dockerfile: Dockerfile
+    image: stakeholders:latest
+    ports:
+      - "5001:8080"  # host 5001 -> container 8080
+    environment:
+      USER_DB_HOST: auth-db
+      USER_DB_USER: postgres
+      USER_DB_PASS: password
+      USER_DB_NAME: auth
+      USER_DB_PORT: "5432"
+      USER_SERVICE_PORT: "8080"
+        # JWT verification
+      Jwt__Key: "aiugbherajndfuieajdvnaiuerkjdfnaeui"  # must match Auth
+      Jwt__Issuer: "AuthService"
+      Jwt__Audience: "AuthServiceClient"
+    depends_on:
+      - auth
+      - auth-db
 
 volumes:
   auth_data:
