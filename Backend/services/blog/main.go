@@ -26,7 +26,7 @@ func initMongoDB() MongoCollections {
 
 	mongoURI := os.Getenv("MONGO_URI")
 	if mongoURI == "" {
-		mongoURI = "mongodb://localhost:27017" // fallback
+		mongoURI = "mongodb://localhost:27017"
 	}
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI))
 	if err != nil {
@@ -40,17 +40,22 @@ func initMongoDB() MongoCollections {
 
 	db := client.Database("blogdb")
 
-	return MongoCollections{
+	collections := MongoCollections{
 		Blogs:    db.Collection("blogs"),
 		Comments: db.Collection("comments"),
 	}
+
+	return collections
 }
 
 func startServer(handler *handler.BlogHandler) {
 	router := mux.NewRouter().StrictSlash(true)
 
-	router.HandleFunc("/blogs/{id}", handler.FindById).Methods("GET")
+	router.HandleFunc("/blogs", handler.GetAll).Methods("GET")
+	router.HandleFunc("/blogs/{id}", handler.GetById).Methods("GET")
 	router.HandleFunc("/blogs", handler.Create).Methods("POST")
+	router.HandleFunc("/blogs/{id}", handler.Delete).Methods("DELETE")
+	router.HandleFunc("/blogs/{id}", handler.Update).Methods("PUT")
 
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static")))
 	println("Server starting")

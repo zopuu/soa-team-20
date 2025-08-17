@@ -15,8 +15,8 @@ type Blog struct {
 	Likes          []Like    `json:"likes" bson:"likes"`
 }
 
-func CreateNewBlog(title, description string, images []string) Blog {
-	return Blog{
+func CreateNewBlog(title, description string, images []string) *Blog {
+	return &Blog{
 		ID:             uuid.New(),
 		Title:          title,
 		Description:    description,

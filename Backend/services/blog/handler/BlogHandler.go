@@ -7,6 +7,7 @@ import (
 
 	"blog.xws.com/model"
 	"blog.xws.com/service"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
@@ -14,17 +15,37 @@ type BlogHandler struct {
 	BlogService *service.BlogService
 }
 
-func (handler *BlogHandler) FindById(writer http.ResponseWriter, req *http.Request) {
-	id := mux.Vars(req)["id"]
-	log.Printf("Blog sa id-em %s", id)
-	// student, err := handler.StudentService.FindStudent(id)
-	// writer.Header().Set("Content-Type", "application/json")
-	// if err != nil {
-	// 	writer.WriteHeader(http.StatusNotFound)
-	// 	return
-	// }
+func (handler *BlogHandler) GetAll(writer http.ResponseWriter, req *http.Request) {
+	blogs, err := handler.BlogService.GetAllBlogs()
+	writer.Header().Set("Content-Type", "application/json")
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	writer.WriteHeader(http.StatusOK)
-	// json.NewEncoder(writer).Encode(student)
+	json.NewEncoder(writer).Encode(blogs)
+}
+
+func (handler *BlogHandler) GetById(writer http.ResponseWriter, req *http.Request) {
+	idStr := mux.Vars(req)["id"]
+	log.Printf("Blog sa id-em %s", idStr)
+
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		http.Error(writer, "Invalid UUID", http.StatusBadRequest)
+		return
+	}
+
+	blog, err := handler.BlogService.GetById(id) // make sure your service takes uuid.UUID
+	writer.Header().Set("Content-Type", "application/json")
+	if err != nil {
+		writer.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	writer.WriteHeader(http.StatusOK)
+	json.NewEncoder(writer).Encode(blog)
 }
 
 func (handler *BlogHandler) Create(writer http.ResponseWriter, req *http.Request) {
@@ -43,4 +64,61 @@ func (handler *BlogHandler) Create(writer http.ResponseWriter, req *http.Request
 	}
 	writer.WriteHeader(http.StatusCreated)
 	writer.Header().Set("Content-Type", "application/json")
+}
+
+func (handler *BlogHandler) Delete(writer http.ResponseWriter, req *http.Request) {
+	idStr := mux.Vars(req)["id"]
+	log.Printf("Deleting blog with ID: %s", idStr)
+
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		http.Error(writer, "Invalid UUID", http.StatusBadRequest)
+		return
+	}
+
+	err = handler.BlogService.Delete(id)
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	writer.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(writer).Encode(map[string]string{"message": "Blog deleted successfully"})
+}
+
+func (handler *BlogHandler) Update(writer http.ResponseWriter, req *http.Request) {
+	idStr := mux.Vars(req)["id"]
+	log.Printf("Updating blog with ID: %s", idStr)
+
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		http.Error(writer, "Invalid UUID", http.StatusBadRequest)
+		return
+	}
+
+	var input struct {
+		Title       string   `json:"title"`
+		Description string   `json:"description"`
+		Images      []string `json:"images"`
+	}
+
+	if err := json.NewDecoder(req.Body).Decode(&input); err != nil {
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	updatedBlog := model.Blog{
+		Title:       input.Title,
+		Description: input.Description,
+		Images:      input.Images,
+	}
+
+	err = handler.BlogService.Update(id, updatedBlog)
+	if err != nil {
+		http.Error(writer, "Blog not found", http.StatusNotFound)
+		return
+	}
+
+	writer.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(writer).Encode(map[string]string{"message": "Blog updated successfully"})
 }
