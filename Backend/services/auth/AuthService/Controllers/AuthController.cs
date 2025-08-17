@@ -54,8 +54,9 @@ namespace AuthService.Controllers {
             var username = User.FindFirstValue(ClaimTypes.Name);
             var role = User.FindFirstValue(ClaimTypes.Role);
             var email = User.FindFirstValue(ClaimTypes.Email);
+            var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            return Ok(new { username, role, email });
+            return Ok(new { username, role, email, id });
         }
 
     }
