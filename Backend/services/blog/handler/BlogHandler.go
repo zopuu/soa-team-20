@@ -122,3 +122,22 @@ func (handler *BlogHandler) Update(writer http.ResponseWriter, req *http.Request
 	writer.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(writer).Encode(map[string]string{"message": "Blog updated successfully"})
 }
+
+func (h *BlogHandler) GetAllByUser(writer http.ResponseWriter, req *http.Request) {
+	userIDStr := mux.Vars(req)["userId"]
+	userID, err := uuid.Parse(userIDStr)
+	writer.Header().Set("Content-Type", "application/json")
+	if err != nil {
+		http.Error(writer, "Invalid userId", http.StatusBadRequest)
+		return
+	}
+
+	blogs, err := h.BlogService.GetAllByUser(userID)
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	writer.WriteHeader(http.StatusOK)
+	json.NewEncoder(writer).Encode(blogs)
+}

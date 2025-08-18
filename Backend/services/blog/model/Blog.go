@@ -7,7 +7,8 @@ import (
 )
 
 type Blog struct {
-	ID             uuid.UUID `json:"id" bson:"_id,omitempty"`
+	Id             uuid.UUID `json:"id" bson:"_id,omitempty"`
+	UserId         string    `json:"userId" bson:"userId"`
 	Title          string    `json:"title" bson:"title"`
 	Description    string    `json:"description" bson:"description"`
 	DateOfCreation time.Time `json:"date_of_creation" bson:"date_of_creation"`
@@ -15,9 +16,10 @@ type Blog struct {
 	Likes          []Like    `json:"likes" bson:"likes"`
 }
 
-func CreateNewBlog(title, description string, images []string) *Blog {
+func CreateNewBlog(userId string, title, description string, images []string) *Blog {
 	return &Blog{
-		ID:             uuid.New(),
+		Id:             uuid.New(),
+		UserId:         userId,
 		Title:          title,
 		Description:    description,
 		DateOfCreation: time.Now(),

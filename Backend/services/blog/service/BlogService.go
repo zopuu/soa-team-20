@@ -26,7 +26,7 @@ func (service *BlogService) GetById(id uuid.UUID) (*model.Blog, error) {
 }
 
 func (service *BlogService) Create(blog *model.Blog) error {
-	err := service.BlogRepository.Create(model.CreateNewBlog(blog.Title, blog.Description, blog.Images))
+	err := service.BlogRepository.Create(model.CreateNewBlog(blog.UserId, blog.Title, blog.Description, blog.Images))
 	if err != nil {
 		return err
 	}
@@ -39,4 +39,8 @@ func (service *BlogService) Delete(id uuid.UUID) error {
 
 func (service *BlogService) Update(id uuid.UUID, updatedBlog model.Blog) error {
 	return service.BlogRepository.Update(id, updatedBlog)
+}
+
+func (service *BlogService) GetAllByUser(userID uuid.UUID) ([]model.Blog, error) {
+	return service.BlogRepository.GetAllByUser(userID)
 }

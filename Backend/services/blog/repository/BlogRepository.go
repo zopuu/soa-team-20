@@ -88,3 +88,27 @@ func (repo *BlogRepository) Update(id uuid.UUID, updatedBlog model.Blog) error {
 	}
 	return nil
 }
+
+func (repo *BlogRepository) GetAllByUser(userID uuid.UUID) ([]model.Blog, error) {
+	filter := bson.M{"user_id": userID} // assuming you store it as "user_id" in MongoDB
+	cursor, err := repo.Collection.Find(context.TODO(), filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.TODO())
+
+	var blogs []model.Blog
+	for cursor.Next(context.TODO()) {
+		var blog model.Blog
+		if err := cursor.Decode(&blog); err != nil {
+			return nil, err
+		}
+		blogs = append(blogs, blog)
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+
+	return blogs, nil
+}
