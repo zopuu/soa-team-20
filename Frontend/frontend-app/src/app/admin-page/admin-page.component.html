@@ -20,13 +20,17 @@
         <td>{{u.role}}</td>
         <td>{{u.status}}</td>
         <td>
-          <button *ngIf="u.status === 'ACTIVE'" class="submit-button" (click)="blockUser(u.id)">
-            Block
-          </button>
-          <button *ngIf="u.status === 'BLOCKED'" class="submit-button" (click)="unblockUser(u.id)">
-            Unblock
-          </button>
+          <!-- no actions for admins or for current user -->
+          <ng-container *ngIf="u.role !== 'Admin'">
+            <button *ngIf="u.status === 'ACTIVE'" class="submit-button" (click)="blockUser(u.id)">
+              Block
+            </button>
+            <button *ngIf="u.status === 'BLOCKED'" class="submit-button" (click)="unblockUser(u.id)">
+              Unblock
+            </button>
+          </ng-container>
         </td>
+
       </tr>
     </tbody>
   </table>
