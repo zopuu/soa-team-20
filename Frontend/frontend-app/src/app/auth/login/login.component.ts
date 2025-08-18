@@ -28,14 +28,21 @@ export class LoginComponent {
     const { username, password } = this.loginForm.value as { username: string; password: string };
     this.authService.login({username, password}).subscribe({
       next: () => {
-        Swal.fire({
-          icon: 'success',
-          title: 'Login successful',
-          text: 'You have successfully logged in.',
-          showConfirmButton: false,
-          timer: 2500
+        this.authService.whoAmI().subscribe(user =>{
+
+          Swal.fire({
+            icon: 'success',
+            title: 'Login successful',
+            text: 'You have successfully logged in.',
+            showConfirmButton: false,
+            timer: 2500
+          });
+          if(user.role === 'Admin') {
+            this.router.navigate(['/admin']);
+          } else {
+            this.router.navigate(['/']);
+          }
         });
-        this.router.navigate(['/'])
       },
       error: () =>{
         this.loginForm.setErrors({ invalidCredentials: true })

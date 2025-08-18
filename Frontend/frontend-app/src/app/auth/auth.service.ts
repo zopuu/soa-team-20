@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
+import { map } from 'rxjs/operators';
 
 
 interface RegisterReq { username: string; email: string; password: string; role: string; }
@@ -40,5 +41,15 @@ export class AuthService {
 
   whoAmI(): Observable<WhoAmI> {
     return this.http.get<WhoAmI>(`${this.api}/whoami`);
+  }
+  getRole(): Observable<string> {
+    return this.whoAmI().pipe(
+      map(user => user.role)
+    );
+  }
+  isAdmin(): Observable<boolean> {
+    return this.getRole().pipe(
+      map(role => role === 'Admin')
+    );
   }
 }

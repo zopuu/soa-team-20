@@ -8,5 +8,6 @@ namespace AuthService.Repositories {
         Task AddAsync(User user);
         Task<bool> UsernameExistsAsync(string username);
         Task SaveChangesAsync();
+        Task<List<User>> GetAllAsync(CancellationToken ct = default);
     }
 }

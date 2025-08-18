@@ -10,6 +10,8 @@ import { EditUserComponent } from './users/edit-user/edit-user.component';
 import { ViewUserComponent } from './users/view-user/view-user.component';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { AdminPageComponent } from './admin-page/admin-page.component';
+import { ForbiddenComponent } from './forbbiden/forbbiden.component'; // ✅ fixed import
 
 
 @NgModule({
@@ -18,6 +20,8 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
     HomeComponent,
     EditUserComponent,
     ViewUserComponent,
+    AdminPageComponent,
+    ForbiddenComponent // ✅ fixed declaration
   ],
   imports: [
     BrowserModule,

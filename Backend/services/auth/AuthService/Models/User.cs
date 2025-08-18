@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AuthService.Models 
 {
+    public enum UserStatus { ACTIVE = 0, BLOCKED = 1 }
     public class User
     {
         [Key]
@@ -24,5 +25,10 @@ namespace AuthService.Models
         public string? Moto { get; set; }
         public string? ProfilePhoto { get; set; }
         public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+        [Required] 
+        public UserStatus Status { get; set; } = UserStatus.ACTIVE;
+        public DateTimeOffset? BlockedAt { get; set; }
+
+
     }
 }

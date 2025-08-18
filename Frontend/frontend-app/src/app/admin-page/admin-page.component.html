@@ -1,0 +1,27 @@
+<h1>Admin Panel</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Username</th>
+      <th>Email</th>
+      <th>Role</th>
+      <th>Status</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let u of users">
+      <td>{{u.id}}</td>
+      <td>{{u.username}}</td>
+      <td>{{u.email}}</td>
+      <td>{{u.role}}</td>
+      <td>{{u.status}}</td>
+      <td>
+        <button *ngIf="u.status === 'ACTIVE'" (click)="blockUser(u.id)">Block</button>
+        <button *ngIf="u.status === 'BLOCKED'" (click)="unblockUser(u.id)">Unblock</button>
+      </td>
+    </tr>
+  </tbody>
+</table>
