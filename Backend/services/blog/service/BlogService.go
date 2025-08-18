@@ -41,6 +41,6 @@ func (service *BlogService) Update(id uuid.UUID, updatedBlog model.Blog) error {
 	return service.BlogRepository.Update(id, updatedBlog)
 }
 
-func (service *BlogService) GetAllByUser(userID uuid.UUID) ([]model.Blog, error) {
-	return service.BlogRepository.GetAllByUser(userID)
+func (service *BlogService) GetAllByUser(userId string) ([]model.Blog, error) {
+	return service.BlogRepository.GetAllByUser(userId)
 }

@@ -124,13 +124,9 @@ func (handler *BlogHandler) Update(writer http.ResponseWriter, req *http.Request
 }
 
 func (h *BlogHandler) GetAllByUser(writer http.ResponseWriter, req *http.Request) {
-	userIDStr := mux.Vars(req)["userId"]
-	userID, err := uuid.Parse(userIDStr)
+	userID := mux.Vars(req)["userId"]
+
 	writer.Header().Set("Content-Type", "application/json")
-	if err != nil {
-		http.Error(writer, "Invalid userId", http.StatusBadRequest)
-		return
-	}
 
 	blogs, err := h.BlogService.GetAllByUser(userID)
 	if err != nil {
