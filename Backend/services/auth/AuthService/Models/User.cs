@@ -1,7 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace AuthService.Models {
+namespace AuthService.Models 
+{
+    public enum UserStatus { ACTIVE = 0, BLOCKED = 1 }
     public class User
     {
         [Key]
@@ -17,7 +19,16 @@ namespace AuthService.Models {
         [Required]
         [RegularExpression("Guide|Tourist|Admin", ErrorMessage = "Role must be Guide, Tourist or Admin")]
         public string Role { get; set; }
-
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; } 
+        public string? Description { get; set; }
+        public string? Moto { get; set; }
+        public string? ProfilePhoto { get; set; }
         public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
-}
+        [Required] 
+        public UserStatus Status { get; set; } = UserStatus.ACTIVE;
+        public DateTimeOffset? BlockedAt { get; set; }
+
+
+    }
 }

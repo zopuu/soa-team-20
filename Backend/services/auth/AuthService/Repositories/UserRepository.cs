@@ -23,5 +23,12 @@ namespace AuthService.Repositories {
 
         public Task SaveChangesAsync() => _db.SaveChangesAsync();
 
+        public Task<List<User>> GetAllAsync(CancellationToken cancellationToken = default) =>
+            _db.Users
+                .OrderByDescending(u => u.CreatedAt)
+                .AsNoTracking()
+                .ToListAsync(cancellationToken);
+
+
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.Security.Claims;
 using AuthService.DTOs;
+using AuthService.Exceptions;
 using AuthService.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -36,14 +37,15 @@ namespace AuthService.Controllers {
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequest dto)
         {
-            try
-            {
+            try {
                 var token = await _authService.LoginAsync(dto);
                 return Ok(new { token });
             }
-            catch (UnauthorizedAccessException ex)
-            {
+            catch (UnauthorizedAccessException ex) {
                 return Unauthorized("Invalid username or password.");
+            }
+            catch (AccountBlockedException ex) {
+                return StatusCode(StatusCodes.Status423Locked, new { message = ex.Message });
             }
         }
 
@@ -54,8 +56,9 @@ namespace AuthService.Controllers {
             var username = User.FindFirstValue(ClaimTypes.Name);
             var role = User.FindFirstValue(ClaimTypes.Role);
             var email = User.FindFirstValue(ClaimTypes.Email);
+            var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            return Ok(new { username, role, email });
+            return Ok(new { username, role, email, id });
         }
 
     }

@@ -22,15 +22,42 @@ services:
             POSTGRES_DB: auth
             POSTGRES_USER: postgres
             POSTGRES_PASSWORD: password
+        ports:
+            - "55432:5432"
         volumes:
             - auth_data:/var/lib/postgresql/data
+
+    # Go stakeholders service (no new DB)
+    stakeholders:
+        build:
+            context: ./services/stakeholders
+            dockerfile: Dockerfile
+        image: stakeholders:latest
+        container_name: "stakeholdersService"
+        ports:
+            - "5001:8080" # host 5001 -> container 8080
+        environment:
+            USER_DB_HOST: auth-db
+            USER_DB_USER: postgres
+            USER_DB_PASS: password
+            USER_DB_NAME: auth
+            USER_DB_PORT: "5432"
+            USER_SERVICE_PORT:
+                "8080"
+                # JWT verification
+            Jwt__Key: "aiugbherajndfuieajdvnaiuerkjdfnaeui" # must match Auth
+            Jwt__Issuer: "AuthService"
+            Jwt__Audience: "AuthServiceClient"
+        depends_on:
+            - auth
+            - auth-db
 
     blogservice:
         build:
             context: ./services/blog
             dockerfile: Dockerfile
         container_name: blogService
-        image: blogservice
+        image: blogservice:latest
         ports:
             - "5100:8080"
         environment:
@@ -46,10 +73,6 @@ services:
             - "27017:27017"
         volumes:
             - mongo-data:/data/db
-# placeholder for future services
-#  gateway:
-#    build: ./gateway
-#    ports: [...]
 
 volumes:
     auth_data:

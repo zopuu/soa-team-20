@@ -1,0 +1,37 @@
+<div class="admin-panel">
+  <h1>Admin Panel</h1>
+
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let u of users">
+        <td>{{u.id}}</td>
+        <td>{{u.username}}</td>
+        <td>{{u.email}}</td>
+        <td>{{u.role}}</td>
+        <td>{{u.status}}</td>
+        <td>
+          <!-- no actions for admins or for current user -->
+          <ng-container *ngIf="u.role !== 'Admin'">
+            <button *ngIf="u.status === 'ACTIVE'" class="submit-button" (click)="blockUser(u.id)">
+              Block
+            </button>
+            <button *ngIf="u.status === 'BLOCKED'" class="submit-button" (click)="unblockUser(u.id)">
+              Unblock
+            </button>
+          </ng-container>
+        </td>
+
+      </tr>
+    </tbody>
+  </table>
+</div>
