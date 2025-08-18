@@ -13,7 +13,7 @@ export class LoginComponent {
   constructor(
     private router: Router,
     private authService: AuthService
-  ) {}
+  ) { }
   loginForm = new FormGroup({
     username: new FormControl('', {
       validators: [Validators.required],
@@ -23,12 +23,12 @@ export class LoginComponent {
   });
 
   login() {
-    if(this.loginForm.invalid) return;
+    if (this.loginForm.invalid) return;
 
     const { username, password } = this.loginForm.value as { username: string; password: string };
-    this.authService.login({username, password}).subscribe({
+    this.authService.login({ username, password }).subscribe({
       next: () => {
-        this.authService.whoAmI().subscribe(user =>{
+        this.authService.whoAmI().subscribe(user => {
 
           Swal.fire({
             icon: 'success',
@@ -37,16 +37,18 @@ export class LoginComponent {
             showConfirmButton: false,
             timer: 2500
           });
-          if(user.role === 'Admin') {
+          if (user.role === 'Admin') {
             this.router.navigate(['/admin']);
           } else {
             this.router.navigate(['/']);
           }
         });
       },
-      error: () =>{
-        this.loginForm.setErrors({ invalidCredentials: true })
-      } 
+      error: (err) => {
+        const msg = err?.error?.message || 'Login failed.';
+        Swal.fire({ icon: 'error', title: 'Login failed', text: msg });
+        this.loginForm.setErrors({ invalidCredentials: true });
+      }
     });
   }
 }

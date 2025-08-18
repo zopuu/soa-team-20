@@ -4,6 +4,7 @@ using AuthService.Models;
 using AuthService.Repositories;
 using AuthService.Utills;
 using BCrypt.Net;
+using AuthService.Exceptions;
 
 namespace AuthService.Services {
     public class AuthService : IAuthService
@@ -44,11 +45,11 @@ namespace AuthService.Services {
             // 1) Handle “user not found”
             if (user == null)
                 throw new UnauthorizedAccessException("Invalid credentials.");
+            if (user.Status == UserStatus.BLOCKED) 
+                throw new AccountBlockedException("Your account is blocked. Contact administrator for more details");
+            
 
-            // 2) Check the password once
             var isValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
-
-            // 3) Throw only if the password is *not* valid
             if (!isValid)
                 throw new UnauthorizedAccessException("Invalid credentials.");
 
