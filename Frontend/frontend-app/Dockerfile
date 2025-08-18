@@ -19,7 +19,7 @@ FROM nginx:alpine
 # Copy built Angular files to Nginx web root
 COPY --from=build /app/dist/frontend-app /usr/share/nginx/html
 
-# Expose port 80
+# Expose port 4200
 EXPOSE 80
 
 # Start Nginx
