@@ -11,6 +11,7 @@ import (
 	"blog.xws.com/repository"
 	"blog.xws.com/service"
 	"github.com/gorilla/mux"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -18,6 +19,7 @@ import (
 type MongoCollections struct {
 	Blogs    *mongo.Collection
 	Comments *mongo.Collection
+	Likes    *mongo.Collection
 }
 
 func initMongoDB() MongoCollections {
@@ -43,12 +45,26 @@ func initMongoDB() MongoCollections {
 	collections := MongoCollections{
 		Blogs:    db.Collection("blogs"),
 		Comments: db.Collection("comments"),
+		Likes:    db.Collection("likes"),
+	}
+
+	likeIndex := mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "userId", Value: 1},
+			{Key: "blogId", Value: 1},
+		},
+		Options: options.Index().SetUnique(true),
+	}
+
+	_, err = collections.Likes.Indexes().CreateOne(ctx, likeIndex)
+	if err != nil {
+		log.Fatalf("Failed to create index on Likes: %v", err)
 	}
 
 	return collections
 }
 
-func startServer(handler *handler.BlogHandler) {
+func startServer(handler *handler.BlogHandler, commentHandler *handler.CommentHandler, likeHandler *handler.LikeHandler) {
 	router := mux.NewRouter().StrictSlash(true)
 
 	router.HandleFunc("/blogs", handler.GetAll).Methods("GET")
@@ -57,6 +73,14 @@ func startServer(handler *handler.BlogHandler) {
 	router.HandleFunc("/blogs/{id}", handler.Delete).Methods("DELETE")
 	router.HandleFunc("/blogs/{id}", handler.Update).Methods("PUT")
 	router.HandleFunc("/blogs/users/{userId}", handler.GetAllByUser).Methods("GET")
+	router.HandleFunc("/blogs/{id}/comments", commentHandler.GetByBlogId).Methods("GET")
+	router.HandleFunc("/blogs/comments", commentHandler.Create).Methods("POST")
+	router.HandleFunc("/blogs/comments/{id}", commentHandler.Update).Methods("PUT")
+	router.HandleFunc("/blogs/comments/{id}", commentHandler.Delete).Methods("DELETE")
+	router.HandleFunc("/blogs/comments/{id}", commentHandler.GetById).Methods("GET")
+	router.HandleFunc("/blogs/likes/{blogId}", likeHandler.GetByBlogId).Methods("GET")
+	router.HandleFunc("/blogs/likes", likeHandler.Create).Methods("POST")
+	router.HandleFunc("/blogs/likes/{userId}/{blogId}", likeHandler.Delete).Methods("DELETE")
 
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static")))
 	println("Server starting")
@@ -69,5 +93,13 @@ func main() {
 	blogService := &service.BlogService{BlogRepository: blogRepository}
 	blogHandler := &handler.BlogHandler{BlogService: blogService}
 
-	startServer(blogHandler)
+	commentRepository := &repository.CommentRepository{Collection: collections.Comments}
+	commentService := &service.CommentService{CommentRepository: commentRepository}
+	commentHandler := &handler.CommentHandler{CommentService: commentService}
+
+	likeRepository := &repository.LikeRepository{Collection: collections.Likes}
+	likeService := &service.LikeService{LikeRepository: likeRepository}
+	likeHandler := &handler.LikeHandler{LikeService: likeService}
+
+	startServer(blogHandler, commentHandler, likeHandler)
 }
