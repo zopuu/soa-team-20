@@ -13,6 +13,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { AdminPageComponent } from './admin-page/admin-page.component';
 import { ForbiddenComponent } from './forbbiden/forbbiden.component';
 import { BlogModule } from './blog/blog.module';
+import { TourModule } from './tour/tour.module';
 
 @NgModule({
   declarations: [
@@ -30,6 +31,7 @@ import { BlogModule } from './blog/blog.module';
     ReactiveFormsModule,
     BrowserAnimationsModule,
     BlogModule,
+    TourModule,
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },

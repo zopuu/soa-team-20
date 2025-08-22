@@ -8,6 +8,8 @@ import { ForbiddenComponent } from './forbbiden/forbbiden.component';
 import { AdminGuard } from './auth/admin.guard';
 import { ListBlogsComponent } from './blog/list-blogs/list-blogs.component';
 import { CreateBlogComponent } from './blog/create-blog/create-blog.component';
+import { CreateTourComponent } from './tour/create-tour/create-tour.component';
+import { CreateKeypointComponent } from './tour/create-keypoint/create-keypoint.component';
 
 const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -21,6 +23,8 @@ const routes: Routes = [
   { path: 'forbidden', component: ForbiddenComponent },
   { path: 'blogs', component: ListBlogsComponent },
   { path: 'users/:id/create-blog', component: CreateBlogComponent },
+  { path: 'users/:id/create-tour', component: CreateTourComponent },
+  { path: 'tours/:id/create-keypoint', component: CreateKeypointComponent },
   { path: '**', redirectTo: '' }, // Redirect any unknown paths to home,
 ];
 

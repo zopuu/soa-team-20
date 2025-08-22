@@ -31,4 +31,20 @@ export class AppComponent {
     });
     console.log('Clicked');
   }
+
+  CreateTour() {
+    this.auth.whoAmI().subscribe({
+      next: (me) => this.router.navigate(['/users', me.id, 'create-tour']),
+      error: () => this.router.navigate(['/auth/login']),
+    });
+    console.log('Clicked');
+  }
+
+  CreateKeypoint() {
+    this.auth.whoAmI().subscribe({
+      next: (me) => this.router.navigate(['/users', me.id, 'create-keypoint']),
+      error: () => this.router.navigate(['/auth/login']),
+    });
+    console.log('Clicked');
+  }
 }

@@ -1,0 +1,41 @@
+<div class="create-tour-form">
+  <h2>Create a New Tour</h2>
+
+  <form [formGroup]="tourForm" (ngSubmit)="onSubmit()">
+    <!-- Name -->
+    <mat-form-field appearance="fill">
+      <mat-label>Name</mat-label>
+      <input matInput formControlName="name" />
+      <mat-error *ngIf="tourForm.get('name')?.hasError('required')">
+        Name is required
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Description -->
+    <mat-form-field appearance="fill">
+      <mat-label>Description</mat-label>
+      <textarea matInput rows="4" formControlName="description"></textarea>
+      <mat-error *ngIf="tourForm.get('description')?.hasError('required')">
+        Description is required
+      </mat-error>
+      <mat-error *ngIf="tourForm.get('description')?.hasError('minlength')">
+        Description must be at least 10 characters
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Image -->
+    <mat-form-field appearance="fill">
+      <mat-label>Image URL</mat-label>
+      <input matInput formControlName="image" placeholder="tour.jpg" />
+    </mat-form-field>
+
+    <button
+      mat-raised-button
+      color="primary"
+      type="submit"
+      [disabled]="tourForm.invalid"
+    >
+      Create Tour
+    </button>
+  </form>
+</div>
