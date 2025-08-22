@@ -5,22 +5,30 @@ import { AuthService } from './auth/auth.service';
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  styleUrls: ['./app.component.css'],
 })
 export class AppComponent {
   constructor(private auth: AuthService, private router: Router) {}
 
   goToMyProfile() {
     this.auth.whoAmI().subscribe({
-      next: me => this.router.navigate(['/users', me.id, 'view']),
-      error: () => this.router.navigate(['/auth/login'])
+      next: (me) => this.router.navigate(['/users', me.id, 'view']),
+      error: () => this.router.navigate(['/auth/login']),
     });
   }
 
   goToEditProgile() {
     this.auth.whoAmI().subscribe({
-      next: me => this.router.navigate(['/users', me.id, 'edit']),
-      error: () => this.router.navigate(['/auth/login'])
+      next: (me) => this.router.navigate(['/users', me.id, 'edit']),
+      error: () => this.router.navigate(['/auth/login']),
     });
+  }
+
+  CreateBlog() {
+    this.auth.whoAmI().subscribe({
+      next: (me) => this.router.navigate(['/users', me.id, 'create-blog']),
+      error: () => this.router.navigate(['/auth/login']),
+    });
+    console.log('Clicked');
   }
 }

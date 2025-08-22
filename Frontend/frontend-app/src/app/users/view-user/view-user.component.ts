@@ -5,7 +5,7 @@ import { UserService, User } from '../../services/user.service';
 @Component({
   selector: 'app-view-user',
   templateUrl: './view-user.component.html',
-  styleUrls: ['./view-user.component.css']
+  styleUrls: ['./view-user.component.css'],
 })
 export class ViewUserComponent implements OnInit {
   user?: User;
@@ -15,12 +15,21 @@ export class ViewUserComponent implements OnInit {
   constructor(private route: ActivatedRoute, private users: UserService) {}
 
   ngOnInit(): void {
-    console.log("this.route.snapshot.paramMap.get('id')", this.route.snapshot.paramMap.get('id'));
+    console.log(
+      "this.route.snapshot.paramMap.get('id')",
+      this.route.snapshot.paramMap.get('id')
+    );
     const id = Number(this.route.snapshot.paramMap.get('id') ?? 1);
 
     this.users.getById(id).subscribe({
-      next: (u) => { this.user = u; this.loading = false; },
-      error: () => { this.error = 'Failed to load user.'; this.loading = false; }
+      next: (u) => {
+        this.user = u;
+        this.loading = false;
+      },
+      error: () => {
+        this.error = 'Failed to load user.';
+        this.loading = false;
+      },
     });
   }
 }

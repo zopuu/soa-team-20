@@ -1,0 +1,27 @@
+<div class="list-wrapper">
+  <h2 *ngIf="userId; else allTitle">Blogs by user {{ userId }}</h2>
+  <ng-template #allTitle><h2>All Blogs</h2></ng-template>
+
+  <div class="state" *ngIf="loading">Loading…</div>
+  <div class="state error" *ngIf="error">{{ error }}</div>
+
+  <div class="blog-list" *ngIf="!loading && !error">
+    <div class="blog-card" *ngFor="let b of blogs; trackBy: trackById">
+      <h3 class="title">{{ b.title }}</h3>
+      <p class="desc">{{ b.description }}</p>
+      <div class="meta">
+        <span>{{ b.date_of_creation | date : "medium" }}</span>
+        <span> • by {{ b.userId }}</span>
+      </div>
+
+      <div class="images" *ngIf="b.images?.length">
+        <span *ngFor="let img of b.images; let i = index">
+          <a [href]="img" target="_blank" rel="noopener">Image {{ i + 1 }}</a>
+          <ng-container *ngIf="i < b.images.length - 1"> · </ng-container>
+        </span>
+      </div>
+    </div>
+
+    <div *ngIf="blogs.length === 0" class="state">No blogs found.</div>
+  </div>
+</div>

@@ -1,0 +1,23 @@
+/* Center the form in the middle of the screen */
+.create-blog-form {
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* vertical center */
+  align-items: center; /* horizontal center */
+  min-height: 100vh; /* full viewport height */
+  text-align: center;
+}
+
+/* Form styling */
+.create-blog-form form {
+  display: flex;
+  flex-direction: column; /* stack items vertically */
+  width: 100%;
+  max-width: 400px; /* nice compact width */
+  gap: 1rem; /* spacing between fields */
+}
+
+/* Ensure Material fields span full width */
+mat-form-field {
+  width: 100%;
+}

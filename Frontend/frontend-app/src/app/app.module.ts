@@ -11,8 +11,8 @@ import { ViewUserComponent } from './users/view-user/view-user.component';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { AdminPageComponent } from './admin-page/admin-page.component';
-import { ForbiddenComponent } from './forbbiden/forbbiden.component'; // ✅ fixed import
-
+import { ForbiddenComponent } from './forbbiden/forbbiden.component';
+import { BlogModule } from './blog/blog.module';
 
 @NgModule({
   declarations: [
@@ -21,18 +21,19 @@ import { ForbiddenComponent } from './forbbiden/forbbiden.component'; // ✅ fix
     EditUserComponent,
     ViewUserComponent,
     AdminPageComponent,
-    ForbiddenComponent // ✅ fixed declaration
+    ForbiddenComponent,
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     HttpClientModule,
     ReactiveFormsModule,
-    BrowserAnimationsModule
+    BrowserAnimationsModule,
+    BlogModule,
   ],
   providers: [
-    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
   ],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
 export class AppModule {}

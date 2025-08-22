@@ -64,6 +64,7 @@ func (handler *BlogHandler) Create(writer http.ResponseWriter, req *http.Request
 	}
 	writer.WriteHeader(http.StatusCreated)
 	writer.Header().Set("Content-Type", "application/json")
+	println("Blog successfully created")
 }
 
 func (handler *BlogHandler) Delete(writer http.ResponseWriter, req *http.Request) {
@@ -123,12 +124,12 @@ func (handler *BlogHandler) Update(writer http.ResponseWriter, req *http.Request
 	json.NewEncoder(writer).Encode(map[string]string{"message": "Blog updated successfully"})
 }
 
-func (h *BlogHandler) GetAllByUser(writer http.ResponseWriter, req *http.Request) {
+func (handler *BlogHandler) GetAllByUser(writer http.ResponseWriter, req *http.Request) {
 	userID := mux.Vars(req)["userId"]
 
 	writer.Header().Set("Content-Type", "application/json")
 
-	blogs, err := h.BlogService.GetAllByUser(userID)
+	blogs, err := handler.BlogService.GetAllByUser(userID)
 	if err != nil {
 		http.Error(writer, err.Error(), http.StatusInternalServerError)
 		return

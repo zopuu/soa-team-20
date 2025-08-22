@@ -5,20 +5,27 @@ import { EditUserComponent } from './users/edit-user/edit-user.component';
 import { ViewUserComponent } from './users/view-user/view-user.component';
 import { AdminPageComponent } from './admin-page/admin-page.component';
 import { ForbiddenComponent } from './forbbiden/forbbiden.component';
-import { AdminGuard } from  './auth/admin.guard';
+import { AdminGuard } from './auth/admin.guard';
+import { ListBlogsComponent } from './blog/list-blogs/list-blogs.component';
+import { CreateBlogComponent } from './blog/create-blog/create-blog.component';
 
 const routes: Routes = [
   { path: '', component: HomeComponent },
-  { path: 'auth', loadChildren: () => import('./auth/auth.module').then(m => m.AuthModule)},
+  {
+    path: 'auth',
+    loadChildren: () => import('./auth/auth.module').then((m) => m.AuthModule),
+  },
   { path: 'users/:id/edit', component: EditUserComponent },
   { path: 'users/:id/view', component: ViewUserComponent },
   { path: 'admin', component: AdminPageComponent, canActivate: [AdminGuard] },
   { path: 'forbidden', component: ForbiddenComponent },
+  { path: 'blogs', component: ListBlogsComponent },
+  { path: 'users/:id/create-blog', component: CreateBlogComponent },
   { path: '**', redirectTo: '' }, // Redirect any unknown paths to home,
 ];
 
 @NgModule({
   imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule]
+  exports: [RouterModule],
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {}

@@ -1,0 +1,45 @@
+<div class="create-blog-form">
+  <h2>Create a New Blog</h2>
+
+  <form [formGroup]="blogForm" (ngSubmit)="onSubmit()">
+    <!-- Title -->
+    <mat-form-field appearance="fill">
+      <mat-label>Title</mat-label>
+      <input matInput formControlName="title" />
+      <mat-error *ngIf="blogForm.get('title')?.hasError('required')">
+        Title is required
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Description -->
+    <mat-form-field appearance="fill">
+      <mat-label>Description</mat-label>
+      <textarea matInput rows="4" formControlName="description"></textarea>
+      <mat-error *ngIf="blogForm.get('description')?.hasError('required')">
+        Description is required
+      </mat-error>
+      <mat-error *ngIf="blogForm.get('description')?.hasError('minlength')">
+        Description must be at least 10 characters
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Images -->
+    <mat-form-field appearance="fill">
+      <mat-label>Images (comma-separated URLs)</mat-label>
+      <input
+        matInput
+        formControlName="images"
+        placeholder="img1.jpg, img2.jpg"
+      />
+    </mat-form-field>
+
+    <button
+      mat-raised-button
+      color="primary"
+      type="submit"
+      [disabled]="blogForm.invalid"
+    >
+      Create Blog
+    </button>
+  </form>
+</div>
