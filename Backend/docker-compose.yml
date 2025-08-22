@@ -57,7 +57,7 @@ services:
             context: ./services/blog
             dockerfile: Dockerfile
         container_name: blogService
-        image: blogservice:latest
+        image: blogservice
         ports:
             - "5100:8080"
         environment:
@@ -72,8 +72,31 @@ services:
         ports:
             - "27017:27017"
         volumes:
-            - mongo-data:/data/db
+            - blog-data:/data/db
+
+    tourservice:
+        build:
+            context: ./services/tour
+            dockerfile: Dockerfile
+        container_name: tourService
+        image: tourservice
+        ports:
+            - "5200:8080"
+        environment:
+            - MONGO_URI=mongodb://tourmongodb:27018
+        depends_on:
+            - tourmongodb
+
+    tourmongodb:
+        image: mongo:6
+        container_name: tourDatabase
+        restart: always
+        ports:
+            - "27018:27017"
+        volumes:
+            - tour-data:/data/db
 
 volumes:
     auth_data:
-    mongo-data:
+    blog-data:
+    tour-data:
