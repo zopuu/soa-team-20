@@ -16,7 +16,8 @@ import (
 )
 
 type MongoCollections struct {
-	Tours *mongo.Collection
+	Tours     *mongo.Collection
+	KeyPoints *mongo.Collection
 }
 
 func initMongoDB() MongoCollections {
@@ -25,7 +26,7 @@ func initMongoDB() MongoCollections {
 
 	mongoURI := os.Getenv("MONGO_URI")
 	if mongoURI == "" {
-		mongoURI = "mongodb://localhost:27017"
+		mongoURI = "mongodb://localhost:27018"
 	}
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI))
 	if err != nil {
@@ -40,7 +41,8 @@ func initMongoDB() MongoCollections {
 	db := client.Database("tourdb")
 
 	collections := MongoCollections{
-		Tours: db.Collection("tours"),
+		Tours:     db.Collection("tours"),
+		KeyPoints: db.Collection("keyPoints"),
 	}
 
 	return collections
@@ -67,14 +69,22 @@ func cors(next http.Handler) http.Handler {
 	})
 }
 
-func startServer(handler *handler.TourHandler) {
+func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyPointHandler) {
 	router := mux.NewRouter().StrictSlash(true)
 
-	router.HandleFunc("/tours", handler.GetAll).Methods("GET")
-	router.HandleFunc("/tours/users/{userId}", handler.GetAllByAuthor).Methods("GET")
-	router.HandleFunc("/tours", handler.Create).Methods("POST")
-	router.HandleFunc("/tours/{id}", handler.Delete).Methods("DELETE")
-	router.HandleFunc("/tours/{id}", handler.Update).Methods("PUT")
+	//TOUR ENDPOINTS
+	router.HandleFunc("/tours", tourHandler.GetAll).Methods("GET")
+	router.HandleFunc("/tours/users/{userId}", tourHandler.GetAllByAuthor).Methods("GET")
+	router.HandleFunc("/tours", tourHandler.Create).Methods("POST")
+	router.HandleFunc("/tours/{id}", tourHandler.Delete).Methods("DELETE")
+	router.HandleFunc("/tours/{id}", tourHandler.Update).Methods("PUT")
+
+	//KEYPOINT ENDPOINTS
+	router.HandleFunc("/keyPoints", keyPointHandler.GetAll).Methods("GET")
+	router.HandleFunc("/keyPoints/tours/{tourId}", keyPointHandler.GetAllByTour).Methods("GET")
+	router.HandleFunc("/keyPoints", keyPointHandler.Create).Methods("POST")
+	router.HandleFunc("/keyPoints/{id}", keyPointHandler.Delete).Methods("DELETE")
+	router.HandleFunc("/keyPoints/{id}", keyPointHandler.Update).Methods("PUT")
 
 	router.Methods(http.MethodOptions).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
@@ -89,9 +99,14 @@ func startServer(handler *handler.TourHandler) {
 func main() {
 	collections := initMongoDB()
 
+	//TOUR
 	tourRepository := &repository.TourRepository{Collection: collections.Tours}
 	tourService := &service.TourService{TourRepository: tourRepository}
 	tourHandler := &handler.TourHandler{TourService: tourService}
+	//KEYPOINT
+	keyPointRepository := &repository.KeyPointRepository{Collection: collections.KeyPoints}
+	keyPointService := &service.KeyPointService{KeyPointRepository: keyPointRepository}
+	keyPointHandler := &handler.KeyPointHandler{KeyPointService: keyPointService}
 
-	startServer(tourHandler)
+	startServer(tourHandler, keyPointHandler)
 }

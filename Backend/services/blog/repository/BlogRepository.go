@@ -90,7 +90,7 @@ func (repo *BlogRepository) Update(id uuid.UUID, updatedBlog model.Blog) error {
 }
 
 func (repo *BlogRepository) GetAllByUser(userID string) ([]model.Blog, error) {
-	filter := bson.M{"userId": userID} // assuming you store it as "user_id" in MongoDB
+	filter := bson.M{"userId": userID}
 	cursor, err := repo.Collection.Find(context.TODO(), filter)
 	if err != nil {
 		return nil, err

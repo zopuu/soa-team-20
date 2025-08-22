@@ -8,7 +8,7 @@ import (
 
 type Comment struct {
 	ID             uuid.UUID `json:"id" bson:"_id,omitempty"`
-	UserId         uuid.UUID `json:"userId" bson:"user_id"`
+	UserId         uuid.UUID `json:"userId" bson:"userId"`
 	DateOfCreation time.Time `json:"dateOfCreation" bson:"date_of_creation"`
 	Text           string    `json:"text" bson:"text"`
 	LastEdit       time.Time `json:"lastEdit" bson:"last_edit"`

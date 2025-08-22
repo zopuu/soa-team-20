@@ -16,7 +16,7 @@ type Blog struct {
 	Likes          []Like    `json:"likes" bson:"likes"`
 }
 
-func BeforeCreate(userId string, title, description string, images []string) *Blog {
+func BeforeCreateTour(userId string, title, description string, images []string) *Blog {
 	return &Blog{
 		Id:             uuid.New(),
 		UserId:         userId,

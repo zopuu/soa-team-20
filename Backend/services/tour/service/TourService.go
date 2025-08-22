@@ -18,7 +18,7 @@ func (service *TourService) GetAllByAuthor(userId string) ([]model.Tour, error) 
 }
 
 func (service *TourService) Create(tour *model.Tour) error {
-	err := service.TourRepository.Create(model.BeforeCreate(tour.AuthorId, tour.Title, tour.Description, tour.Tags, tour.Difficulty))
+	err := service.TourRepository.Create(model.BeforeCreateTour(tour.AuthorId, tour.Title, tour.Description, tour.Tags, tour.Difficulty))
 	if err != nil {
 		return err
 	}

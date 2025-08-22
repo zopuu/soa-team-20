@@ -26,7 +26,7 @@ func (service *BlogService) GetById(id uuid.UUID) (*model.Blog, error) {
 }
 
 func (service *BlogService) Create(blog *model.Blog) error {
-	err := service.BlogRepository.Create(model.BeforeCreate(blog.UserId, blog.Title, blog.Description, blog.Images))
+	err := service.BlogRepository.Create(model.BeforeCreateTour(blog.UserId, blog.Title, blog.Description, blog.Images))
 	if err != nil {
 		return err
 	}

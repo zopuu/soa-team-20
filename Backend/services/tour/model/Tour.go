@@ -30,7 +30,7 @@ const (
 	Pro
 )
 
-func BeforeCreate(authorId string, title string, description string, tags []string, difficulty TourDifficulty) *Tour {
+func BeforeCreateTour(authorId string, title string, description string, tags []string, difficulty TourDifficulty) *Tour {
 	return &Tour{
 		Id:          uuid.New(),
 		AuthorId:    authorId,
