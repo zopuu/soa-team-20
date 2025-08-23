@@ -1,0 +1,58 @@
+.list-wrapper {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.state {
+  text-align: center;
+  margin: 1rem 0;
+  opacity: 0.85;
+}
+.state.error {
+  color: #b00020;
+}
+
+.tour-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.tour-card {
+  border: 1px solid #e0e0e0;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  background: #fff;
+}
+
+.small {
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  border-radius: 4px;
+  border: 1px solid #bbb;
+  background: #f7f7f7;
+  cursor: pointer;
+}
+
+.small:hover {
+  background: #efefef;
+}
+
+.small.danger {
+  border-color: #e53935;
+  background: #ffebee;
+  color: #b71c1c;
+}
+
+.tags span {
+  font-size: 0.9rem;
+  color: #555;
+}
+.title {
+  margin: 0 0 6px 0;
+}
+.desc {
+  margin: 0 0 8px 0;
+  color: #444;
+}

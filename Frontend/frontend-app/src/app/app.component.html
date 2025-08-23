@@ -1,11 +1,27 @@
-<nav>
-  <a routerLink="/">Home</a> | <a routerLink="/auth/login">Login</a> |
-  <a routerLink="/auth/register">Register</a> |
-  <button type="button" (click)="goToMyProfile()">View Profile</button>
-  <button type="button" (click)="goToEditProgile()">Edit Profile</button>
-  <button type="button" (click)="CreateBlog()">Create Blog</button>
-  <button type="button" (click)="CreateTour()">Create Tour</button>
-  <button type="button" (click)="CreateKeypoint()">Create Keypoint</button>
+<nav class="navbar">
+  <div class="navbar-left">
+    <a routerLink="/">Home</a>
+    <button type="button" (click)="goToMyProfile()">View Profile</button>
+    <button type="button" (click)="goToEditProgile()">Edit Profile</button>
+    <button type="button" (click)="CreateBlog()">Create Blog</button>
+    <div class="dropdown">
+      <button class="dropbtn">Tours ▾</button>
+      <div class="dropdown-content">
+        <button type="button" (click)="goToAllTours()">All Tours</button>
+        <button type="button" (click)="goToMyTours()">My Tours</button>
+        <button type="button" (click)="CreateTour()">Create Tour</button>
+      </div>
+    </div>
+    <button type="button" (click)="CreateKeypoint()">Create Keypoint</button>
+  </div>
+  <div class="navbar-right">
+    <button type="button" [routerLink]="['/auth/login']" class="nav-btn">
+      Login
+    </button>
+    <button type="button" [routerLink]="['/auth/register']" class="nav-btn">
+      Register
+    </button>
+  </div>
 </nav>
 
 <router-outlet></router-outlet>

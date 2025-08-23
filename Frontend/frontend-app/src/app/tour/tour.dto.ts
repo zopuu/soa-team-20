@@ -4,6 +4,7 @@ export interface TourDto {
   authorId: string;
   title: string;
   description: string;
-  difficulty: TourDifficulty;
+  // backend expects numeric enum for difficulty
+  difficulty: number;
   tags: string[];
 }

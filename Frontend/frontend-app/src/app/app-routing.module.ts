@@ -10,6 +10,7 @@ import { ListBlogsComponent } from './blog/list-blogs/list-blogs.component';
 import { CreateBlogComponent } from './blog/create-blog/create-blog.component';
 import { CreateTourComponent } from './tour/create-tour/create-tour.component';
 import { CreateKeypointComponent } from './tour/create-keypoint/create-keypoint.component';
+import { ListToursComponent } from './tour/list-tours/list-tours.component';
 
 const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -25,6 +26,8 @@ const routes: Routes = [
   { path: 'users/:id/create-blog', component: CreateBlogComponent },
   { path: 'users/:id/create-tour', component: CreateTourComponent },
   { path: 'tours/:id/create-keypoint', component: CreateKeypointComponent },
+  { path: 'tours', component: ListToursComponent },
+  { path: 'users/:id/tours', component: ListToursComponent },
   { path: '**', redirectTo: '' }, // Redirect any unknown paths to home,
 ];
 

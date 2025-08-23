@@ -47,4 +47,15 @@ export class AppComponent {
     });
     console.log('Clicked');
   }
+
+  goToAllTours() {
+    this.router.navigate(['/tours']);
+  }
+
+  goToMyTours() {
+    this.auth.whoAmI().subscribe({
+      next: (me) => this.router.navigate(['/users', me.id, 'tours']),
+      error: () => this.router.navigate(['/auth/login']),
+    });
+  }
 }

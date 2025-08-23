@@ -1,7 +1,8 @@
 export enum TourDifficulty {
-  Easy = 'Easy',
-  Medium = 'Medium',
-  Hard = 'Hard',
+  Beginner = 'Beginner',
+  Intermediate = 'Intermediate',
+  Advanced = 'Advanced',
+  Pro = 'Pro',
 }
 
 export enum TourStatus {
