@@ -1,6 +1,11 @@
-h2 {
-  color: #388e3c;
+:host {
+  display: block;
 }
-form {
-  margin-top: 16px;
+.create-keypoint-root {
+  padding: 8px;
+}
+.map-container {
+  width: 100%;
+  height: 60vh; /* visible map height */
+  border: 1px solid #ddd;
 }

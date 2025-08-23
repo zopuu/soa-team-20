@@ -3,8 +3,7 @@ export interface Coordinates {
   longitude: number;
 }
 
-export interface KeyPoint {
-  id: string;
+export interface KeyPointDto {
   tourId: string;
   name: string;
   description: string;
