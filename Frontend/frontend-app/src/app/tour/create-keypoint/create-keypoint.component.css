@@ -4,8 +4,66 @@
 .create-keypoint-root {
   padding: 8px;
 }
-.map-container {
+
+:host {
+  --navbar-height: 64px;
+}
+
+.kp-page {
+  display: flex;
+  height: calc(100vh - var(--navbar-height));
+  min-height: 400px;
+}
+
+.map-left {
+  flex: 0 0 70%;
+  position: relative;
+}
+
+.form-right {
+  flex: 0 0 30%;
+  box-sizing: border-box;
+  padding: 16px;
+  overflow-y: auto;
+  background: #fafafa;
+  border-left: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.kp-map {
   width: 100%;
-  height: 60vh; /* visible map height */
-  border: 1px solid #ddd;
+  height: 100%;
+}
+
+.form-placeholder {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.leaflet-container {
+  background: #e5e3df;
+}
+
+/* Make Material form fields take the full width of the right column */
+.kp-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.kp-form mat-form-field {
+  width: 100%;
+}
+
+.kp-form input[matInput],
+.kp-form textarea[matInput] {
+  width: 100%;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 8px;
 }

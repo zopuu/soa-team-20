@@ -67,7 +67,6 @@ export class ListToursComponent {
         }
         this.tours = items;
         this.loading = false;
-        console.log('Tours loaded', this.tours);
       },
       error: (err) => {
         console.error('Failed to load tours', err);

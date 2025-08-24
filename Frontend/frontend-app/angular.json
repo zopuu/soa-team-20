@@ -24,6 +24,7 @@
               "node_modules/leaflet/dist/leaflet.css",
               "src/styles.css"
             ],
+            "allowedCommonJsDependencies": ["sweetalert2", "leaflet"],
             "scripts": []
           },
           "configurations": {
@@ -82,6 +83,7 @@
               "node_modules/leaflet/dist/leaflet.css",
               "src/styles.css"
             ],
+            "allowedCommonJsDependencies": ["sweetalert2", "leaflet"],
             "scripts": []
           }
         }

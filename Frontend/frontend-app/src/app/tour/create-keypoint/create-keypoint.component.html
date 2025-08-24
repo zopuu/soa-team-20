@@ -1,4 +1,57 @@
-<div class="create-keypoint-root">
-  <h3>Create Keypoint — Map</h3>
-  <div #mapContainer class="map-container"></div>
+<div class="kp-page">
+  <div class="map-left">
+    <div #mapContainer class="kp-map" aria-label="map container"></div>
+  </div>
+
+  <div class="form-right">
+    <!-- Right column reserved for create form (30% width) -->
+    <form [formGroup]="form" (ngSubmit)="submit()" class="kp-form">
+      <h3>Create Keypoint</h3>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Tour ID</mat-label>
+        <input matInput formControlName="tourId" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Name</mat-label>
+        <input matInput formControlName="name" required />
+        <mat-error *ngIf="form.get('name')?.hasError('required')"
+          >Name is required</mat-error
+        >
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Description</mat-label>
+        <textarea matInput formControlName="description" rows="4"></textarea>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Image URL</mat-label>
+        <input matInput formControlName="image" />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Latitude</mat-label>
+        <input matInput formControlName="latitude" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Longitude</mat-label>
+        <input matInput formControlName="longitude" readonly />
+      </mat-form-field>
+
+      <div class="actions">
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="form.invalid"
+        >
+          Create Keypoint
+        </button>
+        <button mat-button type="button" (click)="cancel()">Cancel</button>
+      </div>
+    </form>
+  </div>
 </div>
