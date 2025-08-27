@@ -103,6 +103,8 @@ func startServer(handler *handler.BlogHandler, commentHandler *handler.CommentHa
 	router.HandleFunc("/blogs/likes", likeHandler.Create).Methods("POST")
 	router.HandleFunc("/blogs/likes/{userId}/{blogId}", likeHandler.Delete).Methods("DELETE")
 
+	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static")))
+
 	router.Methods(http.MethodOptions).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	})
