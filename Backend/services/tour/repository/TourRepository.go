@@ -102,3 +102,16 @@ func (repo *TourRepository) Update(id uuid.UUID, updatedTour model.Tour) error {
 	}
 	return nil
 }
+
+func (repo *TourRepository) GetById(id uuid.UUID) (model.Tour, error) {
+	var tour model.Tour
+	filter := bson.M{"_id": id}
+	err := repo.Collection.FindOne(context.TODO(), filter).Decode(&tour)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return model.Tour{}, errors.New("tour not found")
+		}
+		return model.Tour{}, err
+	}
+	return tour, nil
+}

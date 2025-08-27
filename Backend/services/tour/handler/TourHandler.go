@@ -123,3 +123,25 @@ func (handler *TourHandler) GetAllByAuthor(writer http.ResponseWriter, req *http
 	writer.WriteHeader(http.StatusOK)
 	json.NewEncoder(writer).Encode(tours)
 }
+
+func (handler *TourHandler) GetById(writer http.ResponseWriter, req *http.Request) {
+	idStr := mux.Vars(req)["id"]
+	log.Printf("Fetching tour with ID: %s", idStr)
+
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		http.Error(writer, "Invalid UUID", http.StatusBadRequest)
+		return
+	}
+
+	tour, err := handler.TourService.GetById(id)
+	if err != nil {
+		// if repository returned not found, respond 404
+		http.Error(writer, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusOK)
+	json.NewEncoder(writer).Encode(tour)
+}

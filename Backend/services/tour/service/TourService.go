@@ -32,3 +32,7 @@ func (service *TourService) Delete(id uuid.UUID) error {
 func (service *TourService) Update(id uuid.UUID, updatedTour model.Tour) error {
 	return service.TourRepository.Update(id, updatedTour)
 }
+
+func (service *TourService) GetById(id uuid.UUID) (model.Tour, error) {
+	return service.TourRepository.GetById(id)
+}

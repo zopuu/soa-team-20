@@ -1,0 +1,52 @@
+:host {
+  display: block;
+}
+
+:host {
+  --navbar-height: 64px;
+}
+
+.kp-page {
+  display: flex;
+  height: calc(100vh - var(--navbar-height));
+}
+
+/* Ensure dropdowns/menus and overlays are not clipped by this component */
+:host {
+  overflow: visible;
+}
+
+.kp-page {
+  overflow: visible;
+}
+
+.map-left {
+  flex: 0 0 70%;
+  position: relative;
+}
+
+.form-right {
+  flex: 0 0 30%;
+  padding: 16px;
+  box-sizing: border-box;
+  border-left: 1px solid rgba(0, 0, 0, 0.06);
+  background: #fafafa;
+  overflow-y: auto;
+  position: relative; /* create stacking context lower than overlays */
+  z-index: 1;
+}
+
+/* Bring material menus and overlays above map/panels when necessary */
+:host ::ng-deep .mat-menu-panel,
+:host ::ng-deep .cdk-overlay-pane {
+  z-index: 3000 !important;
+}
+
+.kp-map {
+  width: 100%;
+  height: 100%;
+}
+
+.details p {
+  margin: 8px 0;
+}
