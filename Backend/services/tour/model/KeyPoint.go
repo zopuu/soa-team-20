@@ -1,6 +1,10 @@
 package model
 
-import "github.com/google/uuid"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type KeyPoint struct {
 	Id          uuid.UUID   `json:"id" bson:"_id"`
@@ -9,6 +13,7 @@ type KeyPoint struct {
 	Title       string      `json:"title" bson:"title"`
 	Description string      `json:"description" bson:"description"`
 	Image       string      `json:"image" bson:"image"`
+	CreatedAt   time.Time   `json:"createdAt" bson:"createdAt"`
 }
 
 type Coordinates struct {
@@ -24,5 +29,6 @@ func BeforeCreateKeyPoint(tourId uuid.UUID, coordinates Coordinates, title strin
 		Title:       title,
 		Description: description,
 		Image:       image,
+		CreatedAt:   time.Now(),
 	}
 }

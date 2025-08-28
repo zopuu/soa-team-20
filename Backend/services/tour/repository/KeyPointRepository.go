@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"tour.xws.com/model"
 )
 
@@ -41,6 +42,31 @@ func (repo *KeyPointRepository) GetAll() ([]model.KeyPoint, error) {
 func (repo *KeyPointRepository) GetAllByTour(tourId uuid.UUID) ([]model.KeyPoint, error) {
 	filter := bson.M{"tourId": tourId}
 	cursor, err := repo.Collection.Find(context.TODO(), filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.TODO())
+
+	var keyPoints []model.KeyPoint
+	for cursor.Next(context.TODO()) {
+		var keyPoint model.KeyPoint
+		if err := cursor.Decode(&keyPoint); err != nil {
+			return nil, err
+		}
+		keyPoints = append(keyPoints, keyPoint)
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+
+	return keyPoints, nil
+}
+
+func (repo *KeyPointRepository) GetAllByTourSortedByCreatedAt(tourId uuid.UUID) ([]model.KeyPoint, error) {
+	filter := bson.M{"tourId": tourId}
+	opts := options.Find().SetSort(bson.D{{"createdAt", 1}})
+	cursor, err := repo.Collection.Find(context.TODO(), filter, opts)
 	if err != nil {
 		return nil, err
 	}

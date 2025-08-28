@@ -10,4 +10,5 @@ export interface KeyPoint {
   description: string;
   coordinates: Coordinates;
   image: string;
+  createdAt: Date;
 }
