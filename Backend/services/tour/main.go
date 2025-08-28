@@ -75,6 +75,7 @@ func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyP
 	//TOUR ENDPOINTS
 	router.HandleFunc("/tours", tourHandler.GetAll).Methods("GET")
 	router.HandleFunc("/tours/users/{userId}", tourHandler.GetAllByAuthor).Methods("GET")
+	router.HandleFunc("/tours/{id}", tourHandler.GetById).Methods("GET")
 	router.HandleFunc("/tours", tourHandler.Create).Methods("POST")
 	router.HandleFunc("/tours/{id}", tourHandler.Delete).Methods("DELETE")
 	router.HandleFunc("/tours/{id}", tourHandler.Update).Methods("PUT")
@@ -82,6 +83,7 @@ func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyP
 	//KEYPOINT ENDPOINTS
 	router.HandleFunc("/keyPoints", keyPointHandler.GetAll).Methods("GET")
 	router.HandleFunc("/keyPoints/tours/{tourId}", keyPointHandler.GetAllByTour).Methods("GET")
+	router.HandleFunc("/keyPoints/tours/{tourId}/sortedByCreatedAt", keyPointHandler.GetAllByTourSortedByCreatedAt).Methods("GET")
 	router.HandleFunc("/keyPoints", keyPointHandler.Create).Methods("POST")
 	router.HandleFunc("/keyPoints/{id}", keyPointHandler.Delete).Methods("DELETE")
 	router.HandleFunc("/keyPoints/{id}", keyPointHandler.Update).Methods("PUT")

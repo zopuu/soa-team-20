@@ -48,6 +48,27 @@ func (handler *KeyPointHandler) GetAllByTour(writer http.ResponseWriter, req *ht
 	json.NewEncoder(writer).Encode(keyPoints)
 }
 
+func (handler *KeyPointHandler) GetAllByTourSortedByCreatedAt(writer http.ResponseWriter, req *http.Request) {
+	tourIdStr := mux.Vars(req)["tourId"]
+
+	tourId, err := uuid.Parse(tourIdStr)
+	if err != nil {
+		http.Error(writer, "Invalid UUID", http.StatusBadRequest)
+		return
+	}
+
+	writer.Header().Set("Content-Type", "application/json")
+
+	keyPoints, err := handler.KeyPointService.GetAllByTourSortedByCreatedAt(tourId)
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	writer.WriteHeader(http.StatusOK)
+	json.NewEncoder(writer).Encode(keyPoints)
+}
+
 func (handler *KeyPointHandler) Create(writer http.ResponseWriter, req *http.Request) {
 	var keyPoint model.KeyPoint
 	err := json.NewDecoder(req.Body).Decode(&keyPoint)

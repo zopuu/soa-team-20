@@ -1,4 +1,51 @@
 /* You can add global styles to this file, and also import other style files */
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+/* Ensure Angular/CDK overlays (menus, dialogs) render above Leaflet maps */
+.cdk-overlay-container {
+  z-index: 40000 !important;
+  position: fixed !important;
+}
+
+/* Make sure Leaflet map sits below overlays */
+.leaflet-container {
+  z-index: 0 !important;
+}
+
+/* Lower specific Leaflet panes to avoid covering global overlays */
+.leaflet-pane,
+.leaflet-map-pane,
+.leaflet-tile-pane,
+.leaflet-overlay-pane,
+.leaflet-shadow-pane,
+.leaflet-marker-pane,
+.leaflet-popup-pane,
+.leaflet-tooltip-pane {
+  z-index: 0 !important;
+}
+
+/* Ensure Material menus and overlay panes sit above all maps */
+.mat-menu-panel,
+.cdk-overlay-pane,
+.mat-autocomplete-panel,
+.mat-select-panel {
+  z-index: 45000 !important;
+}
+
+/* Ensure application header/nav sits above maps by default */
+header,
+nav,
+.mat-toolbar,
+.navbar,
+.app-toolbar {
+  position: relative;
+  z-index: 4000 !important;
+}

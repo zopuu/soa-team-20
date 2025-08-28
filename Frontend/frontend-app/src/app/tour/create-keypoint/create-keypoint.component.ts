@@ -48,7 +48,7 @@ export class CreateKeypointComponent
   ) {
     this.form = this.fb.group({
       tourId: ['', Validators.required],
-      name: ['', Validators.required],
+      title: ['', Validators.required],
       description: [''],
       image: [''],
       latitude: [null, Validators.required],
@@ -143,7 +143,7 @@ export class CreateKeypointComponent
             const m = L.marker([lat, lng], { icon: this.existingIcon }).addTo(
               this.map!
             );
-            const title = kp.name || 'Keypoint';
+            const title = kp.title || 'Keypoint';
             const desc = kp.description ? `<div>${kp.description}</div>` : '';
             m.bindPopup(`<b>${title}</b>${desc}`);
             this.existingMarkers.push(m);
@@ -168,7 +168,7 @@ export class CreateKeypointComponent
     const v = this.form.value;
     const dto: KeyPointDto = {
       tourId: v.tourId,
-      name: v.name,
+      title: v.title,
       description: v.description,
       image: v.image,
       coordinates: {
@@ -181,7 +181,7 @@ export class CreateKeypointComponent
       next: (kp) => {
         // Clear input fields but keep tourId so user can add another keypoint
         this.form.patchValue({
-          name: '',
+          title: '',
           description: '',
           image: '',
           latitude: null,

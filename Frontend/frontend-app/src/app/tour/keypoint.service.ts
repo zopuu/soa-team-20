@@ -26,6 +26,12 @@ export class KeypointService {
     return this.http.get<KeyPoint[]>(`${this.api}/tours/${tourId}`);
   }
 
+  getByTourSorted(tourId: string): Observable<KeyPoint[]> {
+    return this.http.get<KeyPoint[]>(
+      `${this.api}/tours/${tourId}/sortedByCreatedAt`
+    );
+  }
+
   update(id: string, dto: KeyPointDto): Observable<KeyPoint> {
     return this.http.put<KeyPoint>(`${this.api}/${id}`, dto as any);
   }

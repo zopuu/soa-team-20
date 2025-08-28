@@ -112,6 +112,11 @@ export class ListToursComponent {
     this.router.navigate(['/tours', tourId, 'create-keypoint']);
   }
 
+  viewTour(tourId: string) {
+    if (!tourId) return;
+    this.router.navigate(['/tours', 'view', tourId]);
+  }
+
   confirmDelete(tourId: string) {
     if (!tourId) return;
     if (!confirm('Delete this tour? This action cannot be undone.')) return;

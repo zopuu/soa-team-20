@@ -39,7 +39,14 @@
         >
           Delete
         </button>
+        <button type="button" (click)="viewTour(t.id)" class="small">
+          View
+        </button>
       </div>
+      <div
+        class="card-actions"
+        style="margin-top: 8px; display: flex; gap: 8px"
+      ></div>
     </div>
 
     <div *ngIf="tours.length === 0" class="state">No tours found.</div>

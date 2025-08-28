@@ -1,0 +1,32 @@
+<div class="kp-page">
+  <div class="map-left">
+    <div #mapContainer class="kp-map" aria-label="map container"></div>
+  </div>
+
+  <div class="form-right">
+    <div class="details">
+      <h3>Tour details</h3>
+      <div *ngIf="tour; else noTour">
+        <p><strong>Title:</strong> {{ tour.title || tour.name }}</p>
+        <p><strong>Description:</strong> {{ tour.description }}</p>
+        <p>
+          <strong>Difficulty:</strong> {{ difficultyLabel(tour.difficulty) }}
+        </p>
+        <p><strong>Tags:</strong> {{ tour.tags.join(", ") }}</p>
+        <p><strong>Status:</strong> {{ tour.status }}</p>
+        <p><strong>Price:</strong> {{ tour.price | currency }}</p>
+      </div>
+      <ng-template #noTour>
+        <p>Tour information not loaded.</p>
+      </ng-template>
+      <button
+        mat-button
+        color="primary"
+        (click)="goToCreateKeypoint()"
+        style="background-color: #1976d2; color: white"
+      >
+        Add Keypoint
+      </button>
+    </div>
+  </div>
+</div>

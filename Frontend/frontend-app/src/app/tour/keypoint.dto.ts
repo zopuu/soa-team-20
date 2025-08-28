@@ -5,7 +5,7 @@ export interface Coordinates {
 
 export interface KeyPointDto {
   tourId: string;
-  name: string;
+  title: string;
   description: string;
   coordinates: Coordinates;
   image: string;
