@@ -1,0 +1,54 @@
+package config
+
+import (
+	"log"
+	"os"
+	"strings"
+	"time"
+)
+
+type Config struct {
+	Port string
+
+	AuthBase string
+	StakeBase string
+	BlogBase string
+	TourBase string
+
+	JwtSecret  string
+	JwtIssuer  string
+	JwtAudience string
+
+	CorsOrigins []string
+
+	// Timeouts
+	DialTimeout   time.Duration
+	ProxyTimeout  time.Duration
+}
+
+func getenv(key, def string) string {
+	if v := os.Getenv(key); v != "" { return v }
+	return def
+}
+
+func New() *Config {
+	c := &Config{
+		Port:       getenv("GATEWAY_PORT", "7000"),
+		AuthBase:   getenv("AUTH_BASE", "http://localhost:5000"),
+		StakeBase:  getenv("STAKE_BASE", "http://localhost:5001"),
+		BlogBase:   getenv("BLOG_BASE", "http://localhost:5100"),
+		TourBase:   getenv("TOUR_BASE", "http://localhost:5200"),
+		JwtSecret:  getenv("JWT_SECRET", "CHANGE_ME"),
+		JwtIssuer:  getenv("JWT_ISSUER", "AuthService"),
+		JwtAudience:getenv("JWT_AUDIENCE", "AuthServiceClient"),
+		CorsOrigins:strings.Split(getenv("CORS_ORIGINS",
+			"http://localhost:4200,http://localhost:5173,http://localhost:8080"), ","),
+		DialTimeout:  5 * time.Second,
+		ProxyTimeout: 30 * time.Second,
+	}
+
+	if c.JwtSecret == "CHANGE_ME" {
+		log.Println("[WARN] JWT_SECRET is default; set a strong secret in env.")
+	}
+	return c
+}

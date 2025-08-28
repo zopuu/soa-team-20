@@ -8,7 +8,7 @@ import { TourDto } from './tour.dto';
   providedIn: 'root',
 })
 export class TourService {
-  private apiUrl = 'http://localhost:5200/tours';
+  private apiUrl = 'http://localhost:7000/tours';
 
   constructor(private http: HttpClient) {}
 

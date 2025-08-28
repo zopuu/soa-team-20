@@ -20,7 +20,7 @@ interface WhoAmI  {
 })
 export class AuthService {
 
-  private api = 'http://localhost:5000/api/auth'
+  private api = 'http://localhost:7000/api/auth'
 
   constructor(private http: HttpClient) { }
 
