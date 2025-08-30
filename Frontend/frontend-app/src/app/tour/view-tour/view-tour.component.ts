@@ -11,6 +11,7 @@ import 'leaflet-routing-machine';
 import { ActivatedRoute, Router } from '@angular/router';
 import { KeypointService } from '../keypoint.service';
 import { TourService } from '../tour.service';
+import { AuthService } from '../../auth/auth.service';
 import { MatDialog } from '@angular/material/dialog';
 import { KeypointDetailDialogComponent } from '../keypoint-detail-dialog/keypoint-detail-dialog.component';
 
@@ -33,16 +34,36 @@ export class ViewTourComponent implements OnInit, AfterViewInit, OnDestroy {
 
   tourId?: string;
   tour: any = null;
+  currentUserId?: string;
+  currentUserRole?: string;
+  isOwner = false;
 
   constructor(
     private route: ActivatedRoute,
     private keypointService: KeypointService,
     private tourService: TourService,
+    private auth: AuthService,
     private dialog: MatDialog,
     private router: Router
   ) {}
 
   ngOnInit(): void {
+    // load current user info first so we can determine ownership
+    this.auth.whoAmI().subscribe({
+      next: (u) => {
+        this.currentUserId = u?.id?.toString();
+        this.currentUserRole = u?.role;
+        this.initializeFromRoute();
+      },
+      error: () => {
+        this.currentUserId = undefined;
+        this.currentUserRole = undefined;
+        this.initializeFromRoute();
+      },
+    });
+  }
+
+  private initializeFromRoute() {
     // prefer snapshot for immediate value, also subscribe to changes
     const sid = this.route.snapshot.paramMap.get('id');
     if (sid) {
@@ -66,7 +87,22 @@ export class ViewTourComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.tourId) return;
     console.log('Loading tour details for id=' + this.tourId);
     this.tourService.getById(this.tourId).subscribe({
-      next: (t) => (this.tour = t),
+      next: (t) => {
+        this.tour = t;
+        // determine ownership (authorId may be number or string)
+        const authorIdRaw = (t as any)['authorId'] ?? (t as any)['userId'];
+        const authorId =
+          authorIdRaw != null ? authorIdRaw.toString() : undefined;
+        this.isOwner = !!(
+          this.currentUserId &&
+          authorId &&
+          this.currentUserId === authorId
+        );
+        // if the map is already initialized, load keypoints now
+        if (this.map) {
+          this.loadKeypoints();
+        }
+      },
       error: (err) => console.error('Failed to load tour', err),
     });
   }
@@ -91,7 +127,12 @@ export class ViewTourComponent implements OnInit, AfterViewInit, OnDestroy {
         this.markers.forEach((m) => m.remove());
         this.markers = [];
         const latlngs: L.LatLng[] = [];
-        (kps || []).forEach((kp: any) => {
+        // If viewer is not owner, only expose the first keypoint
+        const kpsToShow =
+          !this.isOwner && (kps || []).length > 0
+            ? [(kps || [])[0]]
+            : kps || [];
+        kpsToShow.forEach((kp: any) => {
           const lat = kp.coordinates?.latitude;
           const lng = kp.coordinates?.longitude;
           if (lat == null || lng == null) return;
@@ -113,6 +154,16 @@ export class ViewTourComponent implements OnInit, AfterViewInit, OnDestroy {
           });
           this.markers.push(m);
         });
+        // adjust map view to markers if any
+        if (this.markers.length > 0) {
+          const group = L.featureGroup(this.markers);
+          try {
+            this.map!.fitBounds(group.getBounds().pad(0.3));
+          } catch (e) {
+            // ignore fitBounds errors
+            console.warn('fitBounds failed', e);
+          }
+        }
         // Draw street-connected route using Leaflet Routing Machine
         if (latlngs.length > 1) {
           if (this.routeControl) {

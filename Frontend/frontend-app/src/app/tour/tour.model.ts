@@ -11,6 +11,12 @@ export enum TourStatus {
   Archived = 'Archived',
 }
 
+export enum TransportType {
+  Walking = 'Walking',
+  Bicyce = 'Bicycle',
+  Bus = 'Bus',
+}
+
 export interface Tour {
   id: string; // UUID
   authorId: string;
@@ -20,4 +26,9 @@ export interface Tour {
   tags: string[];
   status: TourStatus;
   price: number;
+  distance: number;
+  duration: number;
+  publishedAt: Date;
+  archivedAt: Date;
+  transportType: TransportType;
 }

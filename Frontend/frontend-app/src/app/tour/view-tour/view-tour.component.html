@@ -7,19 +7,27 @@
     <div class="details">
       <h3>Tour details</h3>
       <div *ngIf="tour; else noTour">
-        <p><strong>Title:</strong> {{ tour.title || tour.name }}</p>
-        <p><strong>Description:</strong> {{ tour.description }}</p>
-        <p>
-          <strong>Difficulty:</strong> {{ difficultyLabel(tour.difficulty) }}
-        </p>
-        <p><strong>Tags:</strong> {{ tour.tags.join(", ") }}</p>
-        <p><strong>Status:</strong> {{ tour.status }}</p>
-        <p><strong>Price:</strong> {{ tour.price | currency }}</p>
+        <!-- If viewer is owner, show full details; otherwise show minimal info -->
+        <ng-container *ngIf="isOwner; else minimalDetails">
+          <p><strong>Title:</strong> {{ tour.title || tour.name }}</p>
+          <p><strong>Description:</strong> {{ tour.description }}</p>
+          <p>
+            <strong>Difficulty:</strong> {{ difficultyLabel(tour.difficulty) }}
+          </p>
+          <p><strong>Tags:</strong> {{ tour.tags.join(", ") }}</p>
+          <p><strong>Status:</strong> {{ tour.status }}</p>
+          <p><strong>Price:</strong> {{ tour.price | currency }}</p>
+        </ng-container>
+        <ng-template #minimalDetails>
+          <p><strong>Title:</strong> {{ tour.title || tour.name }}</p>
+          <p><strong>Description:</strong> {{ tour.description }}</p>
+        </ng-template>
       </div>
       <ng-template #noTour>
         <p>Tour information not loaded.</p>
       </ng-template>
       <button
+        *ngIf="isOwner"
         mat-button
         color="primary"
         (click)="goToCreateKeypoint()"

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -77,12 +78,17 @@ func (handler *TourHandler) Update(writer http.ResponseWriter, req *http.Request
 	}
 
 	var input struct {
-		Title       string               `json:"title"`
-		Description string               `json:"description"`
-		Difficulty  model.TourDifficulty `json:"difficulty"`
-		Tags        []string             `json:"tags"`
-		Status      model.TourStatus     `json:"status"`
-		Price       float64              `json:"price"`
+		Title         string               `json:"title"`
+		Description   string               `json:"description"`
+		Difficulty    model.TourDifficulty `json:"difficulty"`
+		Tags          []string             `json:"tags"`
+		Status        model.TourStatus     `json:"status"`
+		Price         float64              `json:"price"`
+		Distance      float64              `json:"distance"`
+		PublishedAt   time.Time            `json:"publishedAt"`
+		ArchivedAt    time.Time            `json:"archivedAt"`
+		Duration      float64              `json:"duration"`
+		TransportType model.TransportType  `json:"transportType"`
 	}
 
 	if err := json.NewDecoder(req.Body).Decode(&input); err != nil {
@@ -91,12 +97,17 @@ func (handler *TourHandler) Update(writer http.ResponseWriter, req *http.Request
 	}
 
 	updatedTour := model.Tour{
-		Title:       input.Title,
-		Description: input.Description,
-		Difficulty:  input.Difficulty,
-		Tags:        input.Tags,
-		Status:      input.Status,
-		Price:       input.Price,
+		Title:         input.Title,
+		Description:   input.Description,
+		Difficulty:    input.Difficulty,
+		Tags:          input.Tags,
+		Status:        input.Status,
+		Price:         input.Price,
+		Distance:      input.Distance,
+		PublishedAt:   input.PublishedAt,
+		ArchivedAt:    input.ArchivedAt,
+		Duration:      input.Duration,
+		TransportType: input.TransportType,
 	}
 
 	err = handler.TourService.Update(id, updatedTour)

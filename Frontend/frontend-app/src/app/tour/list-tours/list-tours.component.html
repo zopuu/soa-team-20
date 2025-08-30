@@ -7,42 +7,92 @@
 
   <div class="tour-list" *ngIf="!loading && !error">
     <div class="tour-card" *ngFor="let t of tours; trackBy: trackById">
-      <h3 class="title">{{ t.title || t.name }}</h3>
-      <p class="desc">{{ t.description }}</p>
-
-      <div class="meta">
-        <span> • Difficulty: {{ difficultyLabel(t.difficulty) }}</span>
-        <span> • Status: {{ statusLabel(t.status) }}</span>
-        <span> • Price: {{ t.price | currency }}</span>
-        <span> • by {{ t.authorId || t.userId || t.author }}</span>
-      </div>
-
-      <div class="tags" *ngIf="t.tags?.length">
-        <span *ngFor="let tag of t.tags; let i = index"
-          >{{ tag
-          }}<ng-container *ngIf="i < t.tags.length - 1"> · </ng-container></span
+      <!-- Minimal view for non-owners: only title, description, difficulty and price -->
+      <ng-container *ngIf="!isMyTours; else fullCard">
+        <h3 class="title">{{ t.title || t.name }}</h3>
+        <p class="desc">{{ t.description }}</p>
+        <div class="meta">
+          <span> • Difficulty: {{ difficultyLabel(t.difficulty) }}</span>
+          <span> • Price: {{ t.price | currency }}</span>
+        </div>
+        <div
+          class="card-actions"
+          style="margin-top: 8px; display: flex; gap: 8px"
         >
-      </div>
+          <button type="button" (click)="viewTour(t.id)" class="small">
+            View
+          </button>
+        </div>
+      </ng-container>
 
-      <div
-        *ngIf="isMyTours"
-        class="card-actions"
-        style="margin-top: 8px; display: flex; gap: 8px"
-      >
-        <button type="button" (click)="goToCreateKeypoint(t.id)" class="small">
-          Add Key Point
-        </button>
-        <button
-          type="button"
-          (click)="confirmDelete(t.id)"
-          class="small danger"
+      <!-- Full card for owners and admins -->
+      <ng-template #fullCard>
+        <h3 class="title">{{ t.title || t.name }}</h3>
+        <p class="desc">{{ t.description }}</p>
+
+        <div class="meta">
+          <span> • Difficulty: {{ difficultyLabel(t.difficulty) }}</span>
+          <span> • Status: {{ statusLabel(t.status) }}</span>
+          <span> • Price: {{ t.price | currency }}</span>
+          <span> • by {{ t.authorId || t.userId || t.author }}</span>
+          <span> • Published: {{ t.publishedAt | date }}</span>
+          <span> • Distance: {{ t.distance }} km</span>
+          <span> • Duration: {{ t.duration }} min</span>
+        </div>
+
+        <div class="tags" *ngIf="t.tags?.length">
+          <span *ngFor="let tag of t.tags; let i = index"
+            >{{ tag
+            }}<ng-container *ngIf="i < t.tags.length - 1">
+              ·
+            </ng-container></span
+          >
+        </div>
+
+        <div
+          *ngIf="isMyTours"
+          class="card-actions"
+          style="margin-top: 8px; display: flex; gap: 8px"
         >
-          Delete
-        </button>
-        <button type="button" (click)="viewTour(t.id)" class="small">
-          View
-        </button>
-      </div>
+          <button
+            type="button"
+            (click)="goToCreateKeypoint(t.id)"
+            class="small"
+          >
+            Add Key Point
+          </button>
+          <button
+            type="button"
+            (click)="confirmDelete(t.id)"
+            class="small danger"
+          >
+            Delete
+          </button>
+          <button type="button" (click)="viewTour(t.id)" class="small">
+            View
+          </button>
+          <!-- Publish button - visible only for Draft tours -->
+          <button
+            *ngIf="canPublish(t)"
+            type="button"
+            (click)="publishTour(t)"
+            class="small publish-btn"
+            style="background-color: #4caf50; color: white"
+          >
+            Publish
+          </button>
+          <!-- Archive button - visible only for Published tours -->
+          <button
+            *ngIf="canArchive(t)"
+            type="button"
+            (click)="archiveTour(t)"
+            class="small archive-btn"
+            style="background-color: #ff9800; color: white"
+          >
+            Archive
+          </button>
+        </div>
+      </ng-template>
       <div
         class="card-actions"
         style="margin-top: 8px; display: flex; gap: 8px"

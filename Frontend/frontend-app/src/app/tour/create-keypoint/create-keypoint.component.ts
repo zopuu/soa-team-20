@@ -9,9 +9,11 @@ import {
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import * as L from 'leaflet';
+import 'leaflet-routing-machine';
 import { KeypointService } from '../keypoint.service';
 import { KeyPointDto } from '../keypoint.dto';
 import { AuthService } from 'src/app/auth/auth.service';
+import { TourService } from '../tour.service';
 @Component({
   selector: 'app-create-keypoint',
   templateUrl: './create-keypoint.component.html',
@@ -22,6 +24,8 @@ export class CreateKeypointComponent
 {
   @ViewChild('mapContainer', { static: true })
   mapContainer!: ElementRef<HTMLDivElement>;
+  private routeControl?: any;
+  private keypointsForRoute: any[] = [];
   private map?: L.Map;
   private marker?: L.Marker; // marker for the point being created/edited
   private existingMarkers: L.Marker[] = []; // markers for already-saved keypoints
@@ -44,7 +48,8 @@ export class CreateKeypointComponent
     private route: ActivatedRoute,
     private router: Router,
     private keypointService: KeypointService,
-    private auth: AuthService
+    private auth: AuthService,
+    private tourService: TourService
   ) {
     this.form = this.fb.group({
       tourId: ['', Validators.required],
@@ -131,15 +136,23 @@ export class CreateKeypointComponent
     // clear previous markers
     this.existingMarkers.forEach((m) => m.remove());
     this.existingMarkers = [];
+    // Remove previous route
+    if (this.routeControl && this.map) {
+      this.map.removeControl(this.routeControl);
+      this.routeControl = undefined;
+    }
     if (!this.tourId || !this.map) return;
 
-    this.keypointService.getByTour(this.tourId).subscribe({
+    this.keypointService.getByTourSorted(this.tourId).subscribe({
       next: (kps) => {
+        this.keypointsForRoute = kps || [];
+        const latlngs: L.LatLng[] = [];
         (kps || []).forEach((kp: any) => {
           try {
             const lat = kp.coordinates?.latitude;
             const lng = kp.coordinates?.longitude;
             if (lat == null || lng == null) return;
+            latlngs.push(L.latLng(lat, lng));
             const m = L.marker([lat, lng], { icon: this.existingIcon }).addTo(
               this.map!
             );
@@ -151,6 +164,44 @@ export class CreateKeypointComponent
             console.warn('Failed to render keypoint', kp, e);
           }
         });
+        // Draw route if two or more keypoints
+        if (latlngs.length > 1) {
+          this.routeControl = L.Routing.control({
+            waypoints: latlngs,
+            router: L.routing.mapbox(
+              'pk.eyJ1IjoidmVsam9vMDIiLCJhIjoiY20yaGV5OHU4MDFvZjJrc2Q4aGFzMTduNyJ9.vSQUDO5R83hcw1hj70C-RA',
+              { profile: 'mapbox/walking' }
+            ),
+            routeWhileDragging: false,
+            show: false,
+            addWaypoints: false,
+            fitSelectedRoutes: true,
+            lineOptions: {
+              styles: [{ color: 'blue', weight: 4 }],
+              extendToWaypoints: false,
+              missingRouteTolerance: 0,
+            },
+            createMarker: () => null,
+          } as any).addTo(this.map!);
+
+          // Listen for route calculation to update tour distance and duration
+          this.routeControl.on('routesfound', (e: any) => {
+            const routes = e.routes;
+            if (routes && routes.length > 0) {
+              const summary = routes[0].summary;
+              const distanceKm = summary.totalDistance / 1000; // Convert meters to km
+              const durationMinutes = Math.round(summary.totalTime / 60); // Convert seconds to minutes
+
+              // Update the tour with new distance and duration
+              this.updateTourMetrics(distanceKm, durationMinutes);
+            }
+          });
+        }
+        // Zoom to fit all keypoints
+        if (latlngs.length > 0) {
+          const bounds = L.latLngBounds(latlngs);
+          this.map!.fitBounds(bounds, { padding: [32, 32] });
+        }
       },
       error: (err) => console.error('Failed to load keypoints for tour', err),
     });
@@ -161,6 +212,38 @@ export class CreateKeypointComponent
       this.map.remove();
       this.map = undefined;
     }
+  }
+
+  private updateTourMetrics(distanceKm: number, durationMinutes: number): void {
+    if (!this.tourId) return;
+
+    // Get current tour data first
+    this.tourService.getById(this.tourId).subscribe({
+      next: (tour) => {
+        // Update the tour with new distance and duration
+        const updatedTour = {
+          ...tour,
+          distance: distanceKm,
+          duration: durationMinutes,
+        };
+        console.log('Updating tour with new metrics:', updatedTour);
+        this.tourService.update(this.tourId!, updatedTour).subscribe({
+          next: () => {
+            console.log(
+              `Tour updated: Distance=${distanceKm.toFixed(
+                2
+              )}km, Duration=${durationMinutes}min`
+            );
+          },
+          error: (err) => {
+            console.error('Failed to update tour metrics:', err);
+          },
+        });
+      },
+      error: (err) => {
+        console.error('Failed to get tour for update:', err);
+      },
+    });
   }
 
   submit(): void {
