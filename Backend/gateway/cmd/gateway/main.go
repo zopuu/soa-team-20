@@ -70,6 +70,7 @@ func main() {
 		pr.Route("/api/users", func(rr chi.Router) { rr.Handle("/*", secure(stakeProxy)) })
 		pr.Route("/blogs",         func(rr chi.Router) { rr.Handle("/*", secure(blogProxy)) })
 		pr.Route("/tours",         func(rr chi.Router) { rr.Handle("/*", secure(tourProxy)) })
+		pr.Route("/keyPoints",         func(rr chi.Router) { rr.Handle("/*", secure(tourProxy)) })
 	})
 
 	// ---------- gRPC placeholder (next sprint) ----------

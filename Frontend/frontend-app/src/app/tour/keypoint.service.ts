@@ -6,7 +6,7 @@ import { KeyPointDto } from './keypoint.dto';
 
 @Injectable({ providedIn: 'root' })
 export class KeypointService {
-  private api = 'http://localhost:5200/keyPoints';
+  private api = 'http://localhost:7000/keyPoints';
 
   constructor(private http: HttpClient) {}
 
