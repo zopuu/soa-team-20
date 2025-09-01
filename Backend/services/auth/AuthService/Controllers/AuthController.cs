@@ -4,6 +4,7 @@ using AuthService.Exceptions;
 using AuthService.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace AuthService.Controllers {
     [ApiController]
@@ -53,12 +54,17 @@ namespace AuthService.Controllers {
         [HttpGet("whoami")]
         public IActionResult WhoAmI()
         {
-            var username = User.FindFirstValue(ClaimTypes.Name);
-            var role = User.FindFirstValue(ClaimTypes.Role);
-            var email = User.FindFirstValue(ClaimTypes.Email);
-            var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var id =
+                User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+                User.FindFirstValue(JwtRegisteredClaimNames.Sub) ??
+                User.FindFirst("uid")?.Value ??
+                Request.Headers["X-User-Id"].FirstOrDefault(); // gateway fallback
 
-            return Ok(new { username, role, email, id });
+            var username = User.Identity?.Name ?? User.FindFirstValue(ClaimTypes.Name);
+            var role     = User.FindFirstValue(ClaimTypes.Role) ?? User.FindFirst("role")?.Value;
+            var email    = User.FindFirstValue(ClaimTypes.Email) ?? User.FindFirst("email")?.Value;
+
+            return Ok(new { id, username, role, email });
         }
 
     }

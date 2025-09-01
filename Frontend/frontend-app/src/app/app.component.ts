@@ -8,19 +8,36 @@ import { AuthService } from './auth/auth.service';
   styleUrls: ['./app.component.css'],
 })
 export class AppComponent {
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(private auth: AuthService, private router: Router) { }
+
+  private getId(me: any): string | number | undefined {
+    return me?.id ?? me?.Id ?? me?.userId ?? me?.uid;
+  }
 
   goToMyProfile() {
     this.auth.whoAmI().subscribe({
-      next: (me) => this.router.navigate(['/users', me.id, 'view']),
-      error: () => this.router.navigate(['/auth/login']),
+      next: (me): void => {
+        const id = this.getId(me);
+        if (!id) {
+          this.router.navigate(['/auth/login']);
+          return; // <- bez vrednosti (void)
+        }
+        this.router.navigate(['/users', id, 'view']);
+      },
+      error: () => {
+        this.router.navigate(['/auth/login']);
+      }
     });
   }
 
-  goToEditProgile() {
+  goToEditProfile() { // ispravljeno ime
     this.auth.whoAmI().subscribe({
-      next: (me) => this.router.navigate(['/users', me.id, 'edit']),
-      error: () => this.router.navigate(['/auth/login']),
+      next: (me): void => {
+        const id = this.getId(me);
+        if (!id) { this.router.navigate(['/auth/login']); return; }
+        this.router.navigate(['/users', id, 'edit']);
+      },
+      error: () => { this.router.navigate(['/auth/login']); }
     });
   }
 
