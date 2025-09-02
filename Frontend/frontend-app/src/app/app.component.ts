@@ -8,7 +8,20 @@ import { AuthService } from './auth/auth.service';
   styleUrls: ['./app.component.css'],
 })
 export class AppComponent {
-  constructor(private auth: AuthService, private router: Router) { }
+  isGuide: boolean = false;
+  constructor(private auth: AuthService, private router: Router) {}
+
+  ngOnInit() {
+    this.auth.whoAmI().subscribe({
+      next: (me) => {
+        // Refresh page to apply role changes
+        this.isGuide = me?.role === 'Guide';
+      },
+      error: () => {
+        this.isGuide = false;
+      },
+    });
+  }
 
   private getId(me: any): string | number | undefined {
     return me?.id ?? me?.Id ?? me?.userId ?? me?.uid;
@@ -26,18 +39,24 @@ export class AppComponent {
       },
       error: () => {
         this.router.navigate(['/auth/login']);
-      }
+      },
     });
   }
 
-  goToEditProfile() { // ispravljeno ime
+  goToEditProfile() {
+    // ispravljeno ime
     this.auth.whoAmI().subscribe({
       next: (me): void => {
         const id = this.getId(me);
-        if (!id) { this.router.navigate(['/auth/login']); return; }
+        if (!id) {
+          this.router.navigate(['/auth/login']);
+          return;
+        }
         this.router.navigate(['/users', id, 'edit']);
       },
-      error: () => { this.router.navigate(['/auth/login']); }
+      error: () => {
+        this.router.navigate(['/auth/login']);
+      },
     });
   }
 
@@ -46,7 +65,6 @@ export class AppComponent {
       next: (me) => this.router.navigate(['/users', me.id, 'create-blog']),
       error: () => this.router.navigate(['/auth/login']),
     });
-    console.log('Clicked');
   }
 
   CreateTour() {
@@ -54,7 +72,6 @@ export class AppComponent {
       next: (me) => this.router.navigate(['/users', me.id, 'create-tour']),
       error: () => this.router.navigate(['/auth/login']),
     });
-    console.log('Clicked');
   }
 
   goToAllTours() {

@@ -27,16 +27,33 @@
 
       <!-- Full card for owners and admins -->
       <ng-template #fullCard>
-        <h3 class="title">{{ t.title || t.name }}</h3>
+        <h3 class="title">{{ t.title }}</h3>
         <p class="desc">{{ t.description }}</p>
 
         <div class="meta">
           <span> • Difficulty: {{ difficultyLabel(t.difficulty) }}</span>
           <span> • Status: {{ statusLabel(t.status) }}</span>
           <span> • Price: {{ t.price | currency }}</span>
-          <span> • by {{ t.authorId || t.userId || t.author }}</span>
-          <span> • Published: {{ t.publishedAt | date }}</span>
-          <span> • Distance: {{ t.distance }} km</span>
+          <span> • by {{ t.authorId }}</span>
+          <span
+            *ngIf="
+              t.status === 1 &&
+              t.publishedAt &&
+              !t.publishedAt.startsWith('0001-01-01')
+            "
+          >
+            • Published: {{ t.publishedAt | date : "short" }}</span
+          >
+          <span
+            *ngIf="
+              t.status === 2 &&
+              t.archivedAt &&
+              !t.archivedAt.startsWith('0001-01-01')
+            "
+          >
+            • Archived: {{ t.archivedAt | date : "short" }}</span
+          >
+          <span> • Distance: {{ t.distance | number : "1.2-2" }} km</span>
           <span> • Duration: {{ t.duration }} min</span>
         </div>
 

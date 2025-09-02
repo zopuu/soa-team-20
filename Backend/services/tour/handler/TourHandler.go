@@ -78,6 +78,7 @@ func (handler *TourHandler) Update(writer http.ResponseWriter, req *http.Request
 	}
 
 	var input struct {
+		AuthorId      string               `json:"authorId"`
 		Title         string               `json:"title"`
 		Description   string               `json:"description"`
 		Difficulty    model.TourDifficulty `json:"difficulty"`
@@ -97,16 +98,17 @@ func (handler *TourHandler) Update(writer http.ResponseWriter, req *http.Request
 	}
 
 	updatedTour := model.Tour{
-		Title:         input.Title,
-		Description:   input.Description,
-		Difficulty:    input.Difficulty,
-		Tags:          input.Tags,
-		Status:        input.Status,
-		Price:         input.Price,
-		Distance:      input.Distance,
-		PublishedAt:   input.PublishedAt,
-		ArchivedAt:    input.ArchivedAt,
-		Duration:      input.Duration,
+		AuthorId:     input.AuthorId,
+		Title:       input.Title,
+		Description: input.Description,
+		Difficulty:  input.Difficulty,
+		Tags:       input.Tags,
+		Status:     input.Status,
+		Price:     input.Price,
+		Distance:  input.Distance,
+		PublishedAt: input.PublishedAt,
+		ArchivedAt:  input.ArchivedAt,
+		Duration:    input.Duration,
 		TransportType: input.TransportType,
 	}
 

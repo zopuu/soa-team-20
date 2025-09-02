@@ -9,14 +9,119 @@
       <div *ngIf="tour; else noTour">
         <!-- If viewer is owner, show full details; otherwise show minimal info -->
         <ng-container *ngIf="isOwner; else minimalDetails">
-          <p><strong>Title:</strong> {{ tour.title || tour.name }}</p>
-          <p><strong>Description:</strong> {{ tour.description }}</p>
-          <p>
-            <strong>Difficulty:</strong> {{ difficultyLabel(tour.difficulty) }}
-          </p>
-          <p><strong>Tags:</strong> {{ tour.tags.join(", ") }}</p>
-          <p><strong>Status:</strong> {{ tour.status }}</p>
-          <p><strong>Price:</strong> {{ tour.price | currency }}</p>
+          <!-- Edit Mode -->
+          <div *ngIf="isEditMode; else viewMode">
+            <mat-form-field
+              appearance="outline"
+              style="width: 100%; margin-bottom: 16px"
+            >
+              <mat-label>Title</mat-label>
+              <input matInput [(ngModel)]="editForm.title" required />
+            </mat-form-field>
+
+            <mat-form-field
+              appearance="outline"
+              style="width: 100%; margin-bottom: 16px"
+            >
+              <mat-label>Description</mat-label>
+              <textarea
+                matInput
+                [(ngModel)]="editForm.description"
+                rows="3"
+                required
+              ></textarea>
+            </mat-form-field>
+
+            <mat-form-field
+              appearance="outline"
+              style="width: 100%; margin-bottom: 16px"
+            >
+              <mat-label>Difficulty</mat-label>
+              <mat-select [(ngModel)]="editForm.difficulty" required>
+                <mat-option value="Beginner">Beginner</mat-option>
+                <mat-option value="Intermediate">Intermediate</mat-option>
+                <mat-option value="Advanced">Advanced</mat-option>
+                <mat-option value="Pro">Pro</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <div style="margin-bottom: 16px">
+              <label
+                style="font-weight: bold; margin-bottom: 8px; display: block"
+                >Tags:</label
+              >
+              <div style="display: flex; flex-wrap: wrap; gap: 8px">
+                <mat-checkbox
+                  *ngFor="let tag of availableTags; let i = index"
+                  [(ngModel)]="editForm.selectedTags[i]"
+                >
+                  {{ tag }}
+                </mat-checkbox>
+              </div>
+            </div>
+
+            <mat-form-field
+              appearance="outline"
+              style="width: 100%; margin-bottom: 16px"
+            >
+              <mat-label>Price</mat-label>
+              <input
+                matInput
+                type="number"
+                [(ngModel)]="editForm.price"
+                step="0.01"
+                required
+              />
+              <span matSuffix>$</span>
+            </mat-form-field>
+
+            <div style="display: flex; gap: 8px; margin-bottom: 16px">
+              <button mat-raised-button color="primary" (click)="saveChanges()">
+                Save Changes
+              </button>
+              <button mat-raised-button color="warn" (click)="cancelEdit()">
+                Cancel
+              </button>
+            </div>
+          </div>
+
+          <!-- View Mode -->
+          <ng-template #viewMode>
+            <p><strong>Title:</strong> {{ tour.title || tour.name }}</p>
+            <p><strong>Description:</strong> {{ tour.description }}</p>
+            <p>
+              <strong>Difficulty:</strong>
+              {{ difficultyLabel(tour.difficulty) }}
+            </p>
+            <p><strong>Tags:</strong> {{ tour.tags.join(", ") }}</p>
+            <p><strong>Status:</strong> {{ tour.status }}</p>
+            <p><strong>Price:</strong> {{ tour.price | currency }}</p>
+            <p
+              *ngIf="
+                tour.status === 1 &&
+                tour.publishedAt &&
+                !tour.publishedAt.startsWith('0001-01-01')
+              "
+            >
+              <strong>Published at:</strong>
+              {{ tour.publishedAt | date : "short" }}
+            </p>
+            <p
+              *ngIf="
+                tour.status === 2 &&
+                tour.archivedAt &&
+                !tour.archivedAt.startsWith('0001-01-01')
+              "
+            >
+              <strong>Archived at:</strong>
+              {{ tour.archivedAt | date : "short" }}
+            </p>
+            <p>
+              <strong>Distance:</strong>
+              {{ tour.distance | number : "1.2-2" }} km
+            </p>
+            <p><strong>Duration:</strong> {{ tour.duration }} min</p>
+          </ng-template>
         </ng-container>
         <ng-template #minimalDetails>
           <p><strong>Title:</strong> {{ tour.title || tour.name }}</p>
@@ -26,15 +131,27 @@
       <ng-template #noTour>
         <p>Tour information not loaded.</p>
       </ng-template>
-      <button
-        *ngIf="isOwner"
-        mat-button
-        color="primary"
-        (click)="goToCreateKeypoint()"
-        style="background-color: #1976d2; color: white"
-      >
-        Add Keypoint
-      </button>
+
+      <!-- Action buttons for owners -->
+      <div *ngIf="isOwner" style="display: flex; gap: 8px; margin-top: 16px">
+        <button
+          *ngIf="!isEditMode"
+          mat-raised-button
+          color="primary"
+          (click)="goToCreateKeypoint()"
+        >
+          Add Keypoint
+        </button>
+        <button
+          *ngIf="!isEditMode"
+          mat-raised-button
+          color="accent"
+          (click)="enableEditMode()"
+        >
+          Edit Tour
+        </button>
+        <button mat-raised-button (click)="goToMyTours()">Cancel</button>
+      </div>
     </div>
   </div>
 </div>

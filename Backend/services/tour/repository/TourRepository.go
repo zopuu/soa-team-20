@@ -84,6 +84,7 @@ func (repo *TourRepository) Delete(id uuid.UUID) error {
 func (repo *TourRepository) Update(id uuid.UUID, updatedTour model.Tour) error {
 	update := bson.M{
 		"$set": bson.M{
+			"authorId":      updatedTour.AuthorId,
 			"title":         updatedTour.Title,
 			"description":   updatedTour.Description,
 			"difficulty":    updatedTour.Difficulty,

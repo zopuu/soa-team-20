@@ -24,7 +24,7 @@ export class TourService {
     return this.http.post(`${this.apiUrl}`, tour);
   }
 
-  update(id: string, tour: Tour): Observable<any> {
+  update(id: string, tour: any): Observable<any> {
     return this.http.put(`${this.apiUrl}/${id}`, tour);
   }
 

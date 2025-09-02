@@ -8,8 +8,12 @@
       <button class="dropbtn">Tours ▾</button>
       <div class="dropdown-content">
         <button type="button" (click)="goToAllTours()">All Tours</button>
-        <button type="button" (click)="goToMyTours()">My Tours</button>
-        <button type="button" (click)="CreateTour()">Create Tour</button>
+        <button type="button" (click)="goToMyTours()" *ngIf="isGuide">
+          My Tours
+        </button>
+        <button type="button" (click)="CreateTour()" *ngIf="isGuide">
+          Create Tour
+        </button>
       </div>
     </div>
   </div>

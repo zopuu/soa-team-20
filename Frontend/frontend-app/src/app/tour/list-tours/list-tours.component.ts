@@ -3,6 +3,7 @@ import { TourService } from '../tour.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
 import { KeypointService } from '../keypoint.service';
+import { Tour, TourStatus, TransportType } from '../tour.model';
 
 @Component({
   selector: 'app-list-tours',
@@ -10,6 +11,47 @@ import { KeypointService } from '../keypoint.service';
   styleUrls: ['./list-tours.component.css'],
 })
 export class ListToursComponent {
+  // Helper functions to convert string enums to numbers for backend
+  private statusToNumber(status: string): number {
+    switch (status) {
+      case 'Draft':
+        return 0;
+      case 'Published':
+        return 1;
+      case 'Archived':
+        return 2;
+      default:
+        return 0;
+    }
+  }
+
+  private difficultyToNumber(difficulty: string): number {
+    switch (difficulty) {
+      case 'Beginner':
+        return 0;
+      case 'Intermediate':
+        return 1;
+      case 'Advanced':
+        return 2;
+      case 'Pro':
+        return 3;
+      default:
+        return 0;
+    }
+  }
+
+  private transportTypeToNumber(transportType: string): number {
+    switch (transportType) {
+      case 'Walking':
+        return 0;
+      case 'Bicycle':
+        return 1;
+      case 'Bus':
+        return 2;
+      default:
+        return 0;
+    }
+  }
   @Input() userId?: string;
 
   tours: any[] = [];
@@ -39,7 +81,6 @@ export class ListToursComponent {
       next: (user) => {
         this.currentUserId = user.id?.toString();
         this.currentUserRole = user.role;
-        console.log('User role is: ', this.currentUserRole);
         this.updateIsMyTours();
         this.load(); // reload to apply role-based visibility
       },
@@ -69,8 +110,6 @@ export class ListToursComponent {
     req$.subscribe({
       next: (data) => {
         let items = (data || []) as any[];
-        // backend uses numeric status enum: Draft=0, Published=1, Archived=2
-        // If not viewing the owner's tours, only show Published tours
         if (!this.isMyTours) {
           items = items.filter((t) => t.status === 1); // only Published for public lists
         }
@@ -162,52 +201,32 @@ export class ListToursComponent {
         return;
       }
 
-      // Update status immediately for UI responsiveness
-      tour.status = 1;
+      tour.status = this.statusToNumber('Published');
       tour.publishedAt = new Date().toISOString();
-
-      const updatedTour = {
-        ...tour,
-        status: 1, // Published
-        publishedAt: new Date().toISOString(),
-      };
 
       this.tourService.update(tour.id, tour).subscribe({
         next: () => {
           console.log('Tour published successfully');
-          // No need to reload since we already updated the UI
         },
         error: (err) => {
           console.error('Failed to publish tour', err);
-          // Revert the UI change on error
-          tour.status = 0;
-          delete tour.publishedAt;
+          tour.status = TourStatus.Draft;
         },
       });
     });
   }
 
   archiveTour(tour: any) {
-    // Update status immediately for UI responsiveness
-    tour.status = 2;
+    tour.status = this.statusToNumber('Archived');
     tour.archivedAt = new Date().toISOString();
-
-    const updatedTour = {
-      ...tour,
-      status: 2, // Archived
-      archivedAt: new Date().toISOString(),
-    };
 
     this.tourService.update(tour.id, tour).subscribe({
       next: () => {
         console.log('Tour archived successfully');
-        // No need to reload since we already updated the UI
       },
       error: (err) => {
         console.error('Failed to archive tour', err);
-        // Revert the UI change on error
-        tour.status = 1;
-        delete tour.archivedAt;
+        tour.status = TourStatus.Published;
       },
     });
   }

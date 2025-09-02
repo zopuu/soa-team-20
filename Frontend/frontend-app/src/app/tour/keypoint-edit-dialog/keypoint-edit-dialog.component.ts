@@ -86,9 +86,9 @@ export class KeypointEditDialogComponent implements OnInit {
   ngOnInit(): void {
     if (this.data) {
       this.form.patchValue({
-        title: this.data.title || this.data.title || '',
-        description: this.data.description || '',
-        image: this.data.image || '',
+        title: this.data.title,
+        description: this.data.description,
+        image: this.data.image,
       });
       if (this.data.coordinates) {
         this.form.get('latitude')?.setValue(this.data.coordinates.latitude);

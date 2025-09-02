@@ -37,6 +37,16 @@ export class ViewTourComponent implements OnInit, AfterViewInit, OnDestroy {
   currentUserId?: string;
   currentUserRole?: string;
   isOwner = false;
+  isEditMode = false;
+  editForm: any = {};
+  availableTags = [
+    'Nature',
+    'History',
+    'Adventure',
+    'Food',
+    'Culture',
+    'Relax',
+  ];
 
   constructor(
     private route: ActivatedRoute,
@@ -149,6 +159,7 @@ export class ViewTourComponent implements OnInit, AfterViewInit, OnDestroy {
               if (!res) return;
               if (res.action === 'deleted' || res.action === 'delete') {
                 this.loadKeypoints();
+                this.updateTourDistanceAndDuration();
               }
             });
           });
@@ -220,5 +231,193 @@ export class ViewTourComponent implements OnInit, AfterViewInit, OnDestroy {
   goToCreateKeypoint() {
     // navigate to route that allows creating keypoint for a tour
     this.router.navigate(['/tours', this.tourId, 'create-keypoint']);
+  }
+
+  goToMyTours() {
+    this.auth.whoAmI().subscribe({
+      next: (me) => this.router.navigate(['/users', me.id, 'tours']),
+      error: () => this.router.navigate(['/auth/login']),
+    });
+  }
+
+  enableEditMode() {
+    this.isEditMode = true;
+    // Initialize edit form with current tour data
+    this.editForm = {
+      title: this.tour.title,
+      description: this.tour.description,
+      difficulty: this.difficultyLabel(this.tour.difficulty),
+      selectedTags: this.availableTags.map((tag) =>
+        this.tour.tags.includes(tag)
+      ),
+      price: this.tour.price,
+    };
+  }
+
+  cancelEdit() {
+    this.isEditMode = false;
+    this.editForm = {};
+  }
+
+  saveChanges() {
+    if (!this.tourId || !this.tour) return;
+
+    // Build selected tags array from checkboxes
+    const selectedTags = this.editForm.selectedTags
+      .map((selected: boolean, index: number) =>
+        selected ? this.availableTags[index] : null
+      )
+      .filter((tag: string | null) => tag !== null);
+
+    const updatedTourDto = {
+      id: this.tour.id,
+      authorId: this.tour.authorId,
+      title: this.editForm.title,
+      description: this.editForm.description,
+      tags: selectedTags,
+      price: parseFloat(this.editForm.price),
+      distance: this.tour.distance,
+      duration: this.tour.duration,
+      status: this.statusToNumber(this.tour.status),
+      difficulty: this.difficultyToNumber(this.editForm.difficulty),
+      transportType: this.transportTypeToNumber(this.tour.transportType),
+      publishedAt: this.tour.publishedAt,
+      archivedAt: this.tour.archivedAt,
+    };
+
+    this.tourService.update(this.tourId, updatedTourDto).subscribe({
+      next: () => {
+        // Update local tour object
+        this.tour.title = this.editForm.title;
+        this.tour.description = this.editForm.description;
+        this.tour.difficulty = this.editForm.difficulty;
+        this.tour.tags = selectedTags;
+        this.tour.price = updatedTourDto.price;
+
+        this.isEditMode = false;
+        this.editForm = {};
+        console.log('Tour updated successfully');
+      },
+      error: (err) => {
+        console.error('Failed to update tour', err);
+        alert('Failed to update tour. Please try again.');
+      },
+    });
+  }
+
+  // Helper functions to convert string enums to numbers for backend
+  private statusToNumber(status: string): number {
+    switch (status) {
+      case 'Draft':
+        return 0;
+      case 'Published':
+        return 1;
+      case 'Archived':
+        return 2;
+      default:
+        return 0;
+    }
+  }
+
+  private difficultyToNumber(difficulty: string): number {
+    switch (difficulty) {
+      case 'Beginner':
+        return 0;
+      case 'Intermediate':
+        return 1;
+      case 'Advanced':
+        return 2;
+      case 'Pro':
+        return 3;
+      default:
+        return 0;
+    }
+  }
+
+  private transportTypeToNumber(transportType: string): number {
+    switch (transportType) {
+      case 'Walking':
+        return 0;
+      case 'Bicycle':
+        return 1;
+      case 'Bus':
+        return 2;
+      default:
+        return 0;
+    }
+  }
+
+  // Helper to calculate distance between two lat/lng points (Haversine formula)
+  private haversineDistance(
+    lat1: number,
+    lng1: number,
+    lat2: number,
+    lng2: number
+  ): number {
+    const toRad = (x: number) => (x * Math.PI) / 180;
+    const R = 6371; // Earth radius in km
+    const dLat = toRad(lat2 - lat1);
+    const dLng = toRad(lng2 - lng1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) *
+        Math.cos(toRad(lat2)) *
+        Math.sin(dLng / 2) *
+        Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  // Update tour's distance and duration after keypoint deletion
+  private updateTourDistanceAndDuration(): void {
+    if (!this.tourId) return;
+    this.keypointService.getByTourSorted(this.tourId).subscribe({
+      next: (keypoints) => {
+        let totalDistance = 0;
+        for (let i = 1; i < keypoints.length; i++) {
+          const prev = keypoints[i - 1].coordinates;
+          const curr = keypoints[i].coordinates;
+          if (prev && curr) {
+            totalDistance += this.haversineDistance(
+              prev.latitude,
+              prev.longitude,
+              curr.latitude,
+              curr.longitude
+            );
+          }
+        }
+        // Example: duration = totalDistance * 12 (assume 12 min per km, adjust as needed)
+        const totalDuration = Math.round(totalDistance * 12);
+        // Update tour
+        if (this.tour && this.tourId) {
+          const updatedTourDto = {
+            id: this.tour.id,
+            authorId: this.tour.authorId,
+            title: this.tour.title,
+            description: this.tour.description,
+            tags: this.tour.tags,
+            price: this.tour.price,
+            distance: Math.round(totalDistance * 100) / 100, // round to 2 decimals
+            duration: totalDuration,
+            status: this.statusToNumber(this.tour.status),
+            difficulty: this.difficultyToNumber(this.tour.difficulty),
+            transportType: this.transportTypeToNumber(this.tour.transportType),
+            publishedAt: this.tour.publishedAt,
+            archivedAt: this.tour.archivedAt,
+          };
+          this.tourService.update(this.tourId, updatedTourDto).subscribe({
+            next: () => {
+              this.tour.distance = updatedTourDto.distance;
+              this.tour.duration = updatedTourDto.duration;
+              console.log('Tour distance and duration updated successfully');
+            },
+            error: (err) =>
+              console.error('Failed to update tour distance/duration', err),
+          });
+        }
+      },
+      error: (err) =>
+        console.error('Failed to recalculate tour distance/duration', err),
+    });
   }
 }

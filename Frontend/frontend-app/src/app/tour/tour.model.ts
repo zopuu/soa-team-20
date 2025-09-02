@@ -13,7 +13,7 @@ export enum TourStatus {
 
 export enum TransportType {
   Walking = 'Walking',
-  Bicyce = 'Bicycle',
+  Bicycle = 'Bicycle',
   Bus = 'Bus',
 }
 
@@ -22,13 +22,13 @@ export interface Tour {
   authorId: string;
   title: string;
   description: string;
-  difficulty: TourDifficulty;
+  difficulty: number;
   tags: string[];
   status: TourStatus;
   price: number;
   distance: number;
   duration: number;
-  publishedAt: Date;
-  archivedAt: Date;
-  transportType: TransportType;
+  publishedAt: string;
+  archivedAt: string;
+  transportType: number;
 }
