@@ -12,7 +12,7 @@ type KeyPoint struct {
 	Coordinates Coordinates `json:"coordinates" bson:"coordinates"`
 	Title       string      `json:"title" bson:"title"`
 	Description string      `json:"description" bson:"description"`
-	Image       string      `json:"image" bson:"image"`
+	Image       Image       `json:"image" bson:"image"`
 	CreatedAt   time.Time   `json:"createdAt" bson:"createdAt"`
 }
 
@@ -21,7 +21,7 @@ type Coordinates struct {
 	Longitude float64 `json:"longitude" bson:"longitude"`
 }
 
-func BeforeCreateKeyPoint(tourId uuid.UUID, coordinates Coordinates, title string, description string, image string) *KeyPoint {
+func BeforeCreateKeyPoint(tourId uuid.UUID, coordinates Coordinates, title string, description string, image Image) *KeyPoint {
 	return &KeyPoint{
 		Id:          uuid.New(),
 		TourId:      tourId,

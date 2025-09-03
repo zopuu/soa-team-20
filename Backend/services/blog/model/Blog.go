@@ -12,11 +12,11 @@ type Blog struct {
 	Title          string    `json:"title" bson:"title"`
 	Description    string    `json:"description" bson:"description"`
 	DateOfCreation time.Time `json:"date_of_creation" bson:"date_of_creation"`
-	Images         []string  `json:"images" bson:"images"`
+	Images         []Image   `json:"images" bson:"images"`
 	Likes          []Like    `json:"likes" bson:"likes"`
 }
 
-func BeforeCreateTour(userId string, title, description string, images []string) *Blog {
+func BeforeCreateTour(userId string, title, description string, images []Image) *Blog {
 	return &Blog{
 		Id:             uuid.New(),
 		UserId:         userId,

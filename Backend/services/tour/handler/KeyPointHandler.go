@@ -122,7 +122,7 @@ func (handler *KeyPointHandler) Update(writer http.ResponseWriter, req *http.Req
 		Title       string            `json:"title"`
 		Description string            `json:"description"`
 		Coordinates model.Coordinates `json:"coordinates"`
-		Image       string            `json:"image"`
+		Image       model.Image       `json:"image"`
 	}
 
 	if err := json.NewDecoder(req.Body).Decode(&input); err != nil {

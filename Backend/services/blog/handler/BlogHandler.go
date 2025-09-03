@@ -98,9 +98,9 @@ func (handler *BlogHandler) Update(writer http.ResponseWriter, req *http.Request
 	}
 
 	var input struct {
-		Title       string   `json:"title"`
-		Description string   `json:"description"`
-		Images      []string `json:"images"`
+		Title       string        `json:"title"`
+		Description string        `json:"description"`
+		Images      []model.Image `json:"images"`
 	}
 
 	if err := json.NewDecoder(req.Body).Decode(&input); err != nil {
