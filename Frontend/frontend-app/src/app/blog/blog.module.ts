@@ -6,11 +6,13 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { FormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [CreateBlogComponent, ListBlogsComponent],
   imports: [
     CommonModule,
+    FormsModule,
     MatFormFieldModule,
     ReactiveFormsModule,
     MatInputModule,

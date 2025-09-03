@@ -1,3 +1,5 @@
+import { Like } from "./like.model";
+
 export interface Blog {
   id: string;
   userId: string;
@@ -5,5 +7,5 @@ export interface Blog {
   description: string;
   date_of_creation: string;
   images: string[];
-  //likes: Like[];           // array of Like objects
+  likes: Like[];           // array of Like objects
 }

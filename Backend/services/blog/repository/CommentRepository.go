@@ -29,7 +29,7 @@ func (repo *CommentRepository) GetById(id uuid.UUID) (model.Comment, error) {
 	defer cancel()
 
 	var comment model.Comment
-	err := repo.Collection.FindOne(ctx, bson.M{"_id": id}).Decode(&comment)
+	err := repo.Collection.FindOne(ctx, bson.M{"blog_id": id}).Decode(&comment)
 	if err != nil {
 		return comment, err
 	}
@@ -70,8 +70,8 @@ func (repo *CommentRepository) GetCommentsByBlogId(blogId uuid.UUID) (*[]model.C
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	filter := bson.M{"blog_id": blogId}
-
+	filter := bson.M{"blog_id": blogId.String()}
+	//filter := bson.M{}
 	cursor, err := repo.Collection.Find(ctx, filter)
 	if err != nil {
 		return nil, err
@@ -79,6 +79,7 @@ func (repo *CommentRepository) GetCommentsByBlogId(blogId uuid.UUID) (*[]model.C
 	defer cursor.Close(ctx)
 
 	var comments []model.Comment
+	println("Repository comments count", comments)
 	if err = cursor.All(ctx, &comments); err != nil {
 		return nil, err
 	}
