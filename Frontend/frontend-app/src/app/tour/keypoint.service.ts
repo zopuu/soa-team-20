@@ -10,8 +10,19 @@ export class KeypointService {
 
   constructor(private http: HttpClient) {}
 
-  create(dto: KeyPointDto): Observable<KeyPoint> {
-    return this.http.post<KeyPoint>(this.api, dto as any);
+  create(dto: KeyPointDto, imageFile?: File): Observable<KeyPoint> {
+    const formData = new FormData();
+    formData.append('tourId', dto.tourId);
+    formData.append('title', dto.title);
+    formData.append('description', dto.description);
+    formData.append('latitude', dto.coordinates.latitude.toString());
+    formData.append('longitude', dto.coordinates.longitude.toString());
+
+    if (imageFile) {
+      formData.append('image', imageFile);
+    }
+
+    return this.http.post<KeyPoint>(this.api, formData);
   }
 
   getAll(): Observable<KeyPoint[]> {
@@ -32,11 +43,26 @@ export class KeypointService {
     );
   }
 
-  update(id: string, dto: KeyPointDto): Observable<KeyPoint> {
-    return this.http.put<KeyPoint>(`${this.api}/${id}`, dto as any);
+  update(id: string, dto: KeyPointDto, imageFile?: File): Observable<KeyPoint> {
+    const formData = new FormData();
+    formData.append('tourId', dto.tourId);
+    formData.append('title', dto.title);
+    formData.append('description', dto.description);
+    formData.append('latitude', dto.coordinates.latitude.toString());
+    formData.append('longitude', dto.coordinates.longitude.toString());
+
+    if (imageFile) {
+      formData.append('image', imageFile);
+    }
+
+    return this.http.put<KeyPoint>(`${this.api}/${id}`, formData);
   }
 
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.api}/${id}`);
+  }
+
+  getImageUrl(id: string): string {
+    return `${this.api}/${id}/image`;
   }
 }

@@ -1,0 +1,25 @@
+<h3 mat-dialog-title>{{ data?.title || "Keypoint" }}</h3>
+<div mat-dialog-content>
+  <div *ngIf="imageUrl" class="image-container">
+    <img
+      [src]="imageUrl"
+      alt="Keypoint image"
+      class="keypoint-image"
+      (error)="onImageError()"
+      (load)="onImageLoad()"
+    />
+  </div>
+  <div *ngIf="imageError" class="image-error">
+    <p>Unable to load image</p>
+  </div>
+  <p *ngIf="data?.description">{{ data.description }}</p>
+  <p *ngIf="data?.coordinates">
+    Lat: {{ data.coordinates.latitude }}, Lng:
+    {{ data.coordinates.longitude }}
+  </p>
+</div>
+<div mat-dialog-actions>
+  <button mat-button (click)="onUpdate()">Update</button>
+  <button mat-button color="warn" (click)="onDelete()">Delete</button>
+  <button mat-button (click)="onClose()">Close</button>
+</div>

@@ -17,55 +17,13 @@ import { MapPickerDialogComponent } from '../map-picker-dialog/map-picker-dialog
 
 @Component({
   selector: 'app-keypoint-edit-dialog',
-  template: `
-    <h3 mat-dialog-title>Edit keypoint</h3>
-    <form [formGroup]="form">
-      <div mat-dialog-content>
-        <mat-form-field appearance="fill" style="width:100%">
-          <mat-label>Title</mat-label>
-          <input matInput formControlName="title" />
-        </mat-form-field>
-
-        <mat-form-field appearance="fill" style="width:100%">
-          <mat-label>Description</mat-label>
-          <textarea matInput formControlName="description"></textarea>
-        </mat-form-field>
-
-        <mat-form-field appearance="fill" style="width:100%">
-          <mat-label>Image URL</mat-label>
-          <input matInput formControlName="image" />
-        </mat-form-field>
-
-        <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
-          <mat-form-field appearance="fill" style="flex:1">
-            <mat-label>Latitude</mat-label>
-            <input matInput formControlName="latitude" readonly />
-          </mat-form-field>
-          <mat-form-field appearance="fill" style="flex:1">
-            <mat-label>Longitude</mat-label>
-            <input matInput formControlName="longitude" readonly />
-          </mat-form-field>
-          <button mat-button type="button" (click)="onChangeCoordinates()">
-            Change coordinates
-          </button>
-        </div>
-      </div>
-      <div mat-dialog-actions>
-        <button mat-button (click)="onCancel()">Cancel</button>
-        <button
-          mat-button
-          color="primary"
-          (click)="onSave()"
-          [disabled]="form.invalid"
-        >
-          Save
-        </button>
-      </div>
-    </form>
-  `,
+  templateUrl: './keypoint-edit-dialog.component.html',
+  styleUrls: ['./keypoint-edit-dialog.component.css'],
 })
 export class KeypointEditDialogComponent implements OnInit {
   form: FormGroup;
+  selectedImage?: File;
+  currentImageUrl?: string;
 
   constructor(
     private fb: FormBuilder,
@@ -77,7 +35,6 @@ export class KeypointEditDialogComponent implements OnInit {
     this.form = this.fb.group({
       title: ['', Validators.required],
       description: [''],
-      image: [''],
       latitude: [{ value: null, disabled: true }, Validators.required],
       longitude: [{ value: null, disabled: true }, Validators.required],
     });
@@ -88,12 +45,33 @@ export class KeypointEditDialogComponent implements OnInit {
       this.form.patchValue({
         title: this.data.title,
         description: this.data.description,
-        image: this.data.image,
       });
       if (this.data.coordinates) {
         this.form.get('latitude')?.setValue(this.data.coordinates.latitude);
         this.form.get('longitude')?.setValue(this.data.coordinates.longitude);
       }
+      // Set current image URL if keypoint has binary image data
+      if (this.data.image?.data && this.data.image?.mimeType) {
+        this.currentImageUrl = this.createImageDataUrl(
+          this.data.image.data,
+          this.data.image.mimeType
+        );
+      }
+    }
+  }
+
+  private createImageDataUrl(base64Data: string, mimeType: string): string {
+    // If the base64 data doesn't have the data URL prefix, add it
+    if (base64Data.startsWith('data:')) {
+      return base64Data;
+    }
+    return `data:${mimeType};base64,${base64Data}`;
+  }
+
+  onImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.selectedImage = input.files[0];
     }
   }
 
@@ -126,17 +104,19 @@ export class KeypointEditDialogComponent implements OnInit {
   onSave() {
     if (!this.data?.id) return;
     const dto: any = {
+      tourId: this.data.tourId, // Include tourId for backend
       title: this.form.get('title')?.value,
       description: this.form.get('description')?.value,
-      image: this.form.get('image')?.value,
       coordinates: {
         latitude: Number(this.form.get('latitude')?.value),
         longitude: Number(this.form.get('longitude')?.value),
       },
     };
-    this.keypointService.update(this.data.id, dto).subscribe({
-      next: (kp) => this.dialogRef.close({ action: 'updated', kp }),
-      error: () => this.dialogRef.close({ action: 'update-failed' }),
-    });
+    this.keypointService
+      .update(this.data.id, dto, this.selectedImage)
+      .subscribe({
+        next: (kp) => this.dialogRef.close({ action: 'updated', kp }),
+        error: () => this.dialogRef.close({ action: 'update-failed' }),
+      });
   }
 }

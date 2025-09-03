@@ -67,3 +67,28 @@
   align-items: center;
   margin-top: 8px;
 }
+
+.image-upload {
+  margin: 16px 0;
+}
+
+.image-upload mat-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.file-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  background: white;
+}
+
+.selected-file {
+  margin-top: 8px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.6);
+}

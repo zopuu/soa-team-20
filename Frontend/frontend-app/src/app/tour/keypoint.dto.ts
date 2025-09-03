@@ -8,5 +8,5 @@ export interface KeyPointDto {
   title: string;
   description: string;
   coordinates: Coordinates;
-  image: string;
+  image?: File; // Optional file for image upload
 }

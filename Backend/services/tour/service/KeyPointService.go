@@ -22,6 +22,10 @@ func (service *KeyPointService) GetAllByTourSortedByCreatedAt(tourId uuid.UUID) 
 	return service.KeyPointRepository.GetAllByTourSortedByCreatedAt(tourId)
 }
 
+func (service *KeyPointService) GetById(id uuid.UUID) (*model.KeyPoint, error) {
+	return service.KeyPointRepository.GetById(id)
+}
+
 func (service *KeyPointService) Create(keyPoint *model.KeyPoint) error {
 	err := service.KeyPointRepository.Create(model.BeforeCreateKeyPoint(keyPoint.TourId, keyPoint.Coordinates, keyPoint.Title, keyPoint.Description, keyPoint.Image))
 	if err != nil {

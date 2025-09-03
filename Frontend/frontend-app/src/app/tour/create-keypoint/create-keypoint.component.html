@@ -26,10 +26,18 @@
         <textarea matInput formControlName="description" rows="4"></textarea>
       </mat-form-field>
 
-      <mat-form-field appearance="fill">
-        <mat-label>Image URL</mat-label>
-        <input matInput formControlName="image" />
-      </mat-form-field>
+      <div class="image-upload">
+        <mat-label>Image</mat-label>
+        <input
+          type="file"
+          accept="image/*"
+          (change)="onImageSelected($event)"
+          class="file-input"
+        />
+        <div *ngIf="selectedImage" class="selected-file">
+          Selected: {{ selectedImage.name }}
+        </div>
+      </div>
 
       <mat-form-field appearance="fill">
         <mat-label>Latitude</mat-label>

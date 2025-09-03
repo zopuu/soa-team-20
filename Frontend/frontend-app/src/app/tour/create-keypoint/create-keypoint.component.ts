@@ -43,6 +43,7 @@ export class CreateKeypointComponent
   form: FormGroup;
   tourId?: string;
   userId?: string;
+  selectedImage?: File;
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
@@ -55,7 +56,6 @@ export class CreateKeypointComponent
       tourId: ['', Validators.required],
       title: ['', Validators.required],
       description: [''],
-      image: [''],
       latitude: [null, Validators.required],
       longitude: [null, Validators.required],
     });
@@ -74,6 +74,13 @@ export class CreateKeypointComponent
       this.router.navigate(['users', this.userId, 'tours']);
     } else {
       this.router.navigate(['/tours']);
+    }
+  }
+
+  onImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.selectedImage = input.files[0];
     }
   }
 
@@ -158,7 +165,18 @@ export class CreateKeypointComponent
             );
             const title = kp.title || 'Keypoint';
             const desc = kp.description ? `<div>${kp.description}</div>` : '';
-            m.bindPopup(`<b>${title}</b>${desc}`);
+
+            // Create image HTML if keypoint has binary image data
+            let imageHtml = '';
+            if (kp.image?.data && kp.image?.mimeType) {
+              const imageDataUrl = this.createImageDataUrl(
+                kp.image.data,
+                kp.image.mimeType
+              );
+              imageHtml = `<div><img src="${imageDataUrl}" alt="Keypoint image" style="max-width: 200px; max-height: 150px; border-radius: 4px; margin: 8px 0;"></div>`;
+            }
+
+            m.bindPopup(`<b>${title}</b>${desc}${imageHtml}`);
             this.existingMarkers.push(m);
           } catch (e) {
             console.warn('Failed to render keypoint', kp, e);
@@ -253,25 +271,24 @@ export class CreateKeypointComponent
       tourId: v.tourId,
       title: v.title,
       description: v.description,
-      image: v.image,
       coordinates: {
         latitude: Number(v.latitude),
         longitude: Number(v.longitude),
       },
     };
 
-    this.keypointService.create(dto).subscribe({
+    this.keypointService.create(dto, this.selectedImage).subscribe({
       next: (kp) => {
         // Clear input fields but keep tourId so user can add another keypoint
         this.form.patchValue({
           title: '',
           description: '',
-          image: '',
           latitude: null,
           longitude: null,
         });
         this.form.markAsPristine();
         this.form.markAsUntouched();
+        this.selectedImage = undefined;
 
         // remove the temporary create marker from the map
         if (this.marker) {
@@ -286,5 +303,13 @@ export class CreateKeypointComponent
         console.error('Failed to create keypoint', err);
       },
     });
+  }
+
+  private createImageDataUrl(base64Data: string, mimeType: string): string {
+    // If the base64 data doesn't have the data URL prefix, add it
+    if (base64Data.startsWith('data:')) {
+      return base64Data;
+    }
+    return `data:${mimeType};base64,${base64Data}`;
   }
 }

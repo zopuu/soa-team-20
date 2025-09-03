@@ -88,6 +88,18 @@ func (repo *KeyPointRepository) GetAllByTourSortedByCreatedAt(tourId uuid.UUID) 
 	return keyPoints, nil
 }
 
+func (repo *KeyPointRepository) GetById(id uuid.UUID) (*model.KeyPoint, error) {
+	var keyPoint model.KeyPoint
+	err := repo.Collection.FindOne(context.TODO(), bson.M{"_id": id}).Decode(&keyPoint)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, errors.New("keyPoint not found")
+		}
+		return nil, err
+	}
+	return &keyPoint, nil
+}
+
 func (repo *KeyPointRepository) Create(keyPoint *model.KeyPoint) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

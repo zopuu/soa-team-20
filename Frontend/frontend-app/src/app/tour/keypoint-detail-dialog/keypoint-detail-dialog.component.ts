@@ -7,30 +7,46 @@ import { KeypointEditDialogComponent } from '../keypoint-edit-dialog/keypoint-ed
 
 @Component({
   selector: 'app-keypoint-detail-dialog',
-  template: `
-    <h3 mat-dialog-title>{{ data?.title || 'Keypoint' }}</h3>
-    <div mat-dialog-content>
-      <p *ngIf="data?.description">{{ data.description }}</p>
-      <p *ngIf="data?.coordinates">
-        Lat: {{ data.coordinates.latitude }}, Lng:
-        {{ data.coordinates.longitude }}
-      </p>
-    </div>
-    <div mat-dialog-actions>
-      <button mat-button (click)="onUpdate()">Update</button>
-      <button mat-button color="warn" (click)="onDelete()">Delete</button>
-      <button mat-button (click)="onClose()">Close</button>
-    </div>
-  `,
+  templateUrl: './keypoint-detail-dialog.component.html',
+  styleUrls: ['./keypoint-detail-dialog.component.css'],
 })
 export class KeypointDetailDialogComponent {
+  imageUrl?: string;
+  imageError = false;
+
   constructor(
     public dialogRef: MatDialogRef<KeypointDetailDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any,
     private router: Router,
     private keypointService: KeypointService,
     private dialog: MatDialog
-  ) {}
+  ) {
+    // Set image URL if keypoint has binary image data
+    if (data?.image?.data && data?.image?.mimeType) {
+      this.imageUrl = this.createImageDataUrl(
+        data.image.data,
+        data.image.mimeType
+      );
+      console.log('Image data found:', data.image);
+    }
+  }
+
+  private createImageDataUrl(base64Data: string, mimeType: string): string {
+    // If the base64 data doesn't have the data URL prefix, add it
+    if (base64Data.startsWith('data:')) {
+      return base64Data;
+    }
+    return `data:${mimeType};base64,${base64Data}`;
+  }
+
+  onImageError(): void {
+    this.imageError = true;
+    console.error('Failed to load image');
+  }
+
+  onImageLoad(): void {
+    this.imageError = false;
+  }
 
   onClose() {
     this.dialogRef.close({ action: 'close' });

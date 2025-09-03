@@ -1,3 +1,5 @@
+import { Image } from './image.model';
+
 export interface Coordinates {
   latitude: number;
   longitude: number;
@@ -6,9 +8,9 @@ export interface Coordinates {
 export interface KeyPoint {
   id: string;
   tourId: string;
-  name: string;
+  title: string;
   description: string;
   coordinates: Coordinates;
-  image: string;
+  image: Image;
   createdAt: Date;
 }

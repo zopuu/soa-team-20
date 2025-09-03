@@ -87,6 +87,7 @@ func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyP
 	router.HandleFunc("/keyPoints", keyPointHandler.Create).Methods("POST")
 	router.HandleFunc("/keyPoints/{id}", keyPointHandler.Delete).Methods("DELETE")
 	router.HandleFunc("/keyPoints/{id}", keyPointHandler.Update).Methods("PUT")
+	router.HandleFunc("/keyPoints/{id}/image", keyPointHandler.GetImage).Methods("GET")
 
 	router.Methods(http.MethodOptions).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
