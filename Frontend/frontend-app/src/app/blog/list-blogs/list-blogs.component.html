@@ -15,10 +15,15 @@
       </div>
 
       <div class="images" *ngIf="b.images?.length">
-        <span *ngFor="let img of b.images; let i = index">
-          <a [href]="img" target="_blank" rel="noopener">Image {{ i + 1 }}</a>
-          <ng-container *ngIf="i < b.images.length - 1"> · </ng-container>
-        </span>
+        <div class="image-gallery">
+          <img
+            *ngFor="let img of b.images; let i = index"
+            [src]="createImageDataUrl(img.data || '', img.mimeType || '')"
+            [alt]="img.filename || 'Blog image '"
+            class="blog-image"
+            (error)="onImageError($event)"
+          />
+        </div>
       </div>
     </div>
 

@@ -24,14 +24,22 @@
     </mat-form-field>
 
     <!-- Images -->
-    <mat-form-field appearance="fill">
-      <mat-label>Images (comma-separated URLs)</mat-label>
+    <div class="image-upload">
+      <mat-label>Images</mat-label>
       <input
-        matInput
-        formControlName="images"
-        placeholder="img1.jpg, img2.jpg"
+        type="file"
+        accept="image/*"
+        multiple
+        (change)="onImagesSelected($event)"
+        class="file-input"
       />
-    </mat-form-field>
+      <div *ngIf="selectedImages.length > 0" class="selected-files">
+        Selected {{ selectedImages.length }} image(s):
+        <ul>
+          <li *ngFor="let img of selectedImages">{{ img.name }}</li>
+        </ul>
+      </div>
+    </div>
 
     <button
       mat-raised-button

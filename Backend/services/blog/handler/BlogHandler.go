@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"io"
 	"log"
 	"net/http"
 
@@ -49,14 +50,68 @@ func (handler *BlogHandler) GetById(writer http.ResponseWriter, req *http.Reques
 }
 
 func (handler *BlogHandler) Create(writer http.ResponseWriter, req *http.Request) {
-	var blog model.Blog
-	err := json.NewDecoder(req.Body).Decode(&blog)
-	if err != nil {
-		println("Error while parsing json")
-		writer.WriteHeader(http.StatusBadRequest)
-		return
+	// Check content type to determine how to parse request
+	contentType := req.Header.Get("Content-Type")
+	
+	var blog *model.Blog
+	var err error
+
+	if contentType == "application/json" {
+		// Handle JSON request (existing behavior)
+		var blogData model.Blog
+		err = json.NewDecoder(req.Body).Decode(&blogData)
+		if err != nil {
+			println("Error while parsing json")
+			writer.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		blog = &blogData
+	} else {
+		// Handle multipart form data (new behavior for file uploads)
+		err = req.ParseMultipartForm(50 << 20) // 50MB limit for multiple images
+		if err != nil {
+			http.Error(writer, "Failed to parse multipart form", http.StatusBadRequest)
+			return
+		}
+
+		// Extract form fields
+		userId := req.FormValue("userId")
+		title := req.FormValue("title")
+		description := req.FormValue("description")
+
+		// Handle multiple image uploads
+		var images []model.Image
+		files := req.MultipartForm.File["images"]
+		for _, fileHeader := range files {
+			file, err := fileHeader.Open()
+			if err != nil {
+				continue // Skip files that can't be opened
+			}
+			defer file.Close()
+
+			// Read image data
+			imageData, err := io.ReadAll(file)
+			if err != nil {
+				continue // Skip files that can't be read
+			}
+
+			// Validate image type
+			mimeType := fileHeader.Header.Get("Content-Type")
+			if mimeType != "image/jpeg" && mimeType != "image/png" && mimeType != "image/gif" && mimeType != "image/webp" {
+				continue // Skip invalid image formats
+			}
+
+			images = append(images, model.Image{
+				Data:     imageData,
+				MimeType: mimeType,
+				Filename: fileHeader.Filename,
+			})
+		}
+
+		blog = model.BeforeCreateTour(userId, title, description, images)
 	}
-	err = handler.BlogService.Create(&blog)
+
+	err = handler.BlogService.Create(blog)
 	if err != nil {
 		println("Error while creating a new blog")
 		writer.WriteHeader(http.StatusExpectationFailed)

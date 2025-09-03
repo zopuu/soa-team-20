@@ -11,6 +11,7 @@ import { BlogDto } from '../blog.dto';
 })
 export class CreateBlogComponent {
   blogForm: FormGroup;
+  selectedImages: File[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -20,8 +21,14 @@ export class CreateBlogComponent {
     this.blogForm = this.fb.group({
       title: ['', Validators.required],
       description: ['', [Validators.required, Validators.minLength(10)]],
-      images: [''],
     });
+  }
+
+  onImagesSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files) {
+      this.selectedImages = Array.from(input.files);
+    }
   }
 
   onSubmit(): void {
@@ -30,15 +37,14 @@ export class CreateBlogComponent {
         userId: '1',
         title: this.blogForm.value.title,
         description: this.blogForm.value.description,
-        images: this.blogForm.value.images
-          ? this.blogForm.value.images.split(',')
-          : [],
       };
 
-      this.blogService.create(newBlog).subscribe({
+      this.blogService.create(newBlog, this.selectedImages).subscribe({
         next: () => {
           console.log('Blog created successfully!');
+          console.log('selected images:', this.selectedImages);
           this.blogForm.reset();
+          this.selectedImages = [];
         },
         error: (err) => {
           console.error('Error creating blog:', err);

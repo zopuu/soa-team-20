@@ -26,6 +26,20 @@ export class ListBlogsComponent implements OnChanges {
     this.load();
   }
 
+  createImageDataUrl(base64Data: string, mimeType: string): string {
+    if (base64Data.startsWith('data:')) {
+      return base64Data;
+    }
+    return `data:${mimeType};base64,${base64Data}`;
+  }
+
+  onImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (img) {
+      img.style.display = 'none';
+    }
+  }
+
   private load(): void {
     this.loading = true;
     this.error = '';
