@@ -16,8 +16,9 @@ import (
 )
 
 type MongoCollections struct {
-	Tours     *mongo.Collection
-	KeyPoints *mongo.Collection
+	Tours            *mongo.Collection
+	KeyPoints        *mongo.Collection
+	CurrentLocations *mongo.Collection
 }
 
 func initMongoDB() MongoCollections {
@@ -41,8 +42,9 @@ func initMongoDB() MongoCollections {
 	db := client.Database("tourdb")
 
 	collections := MongoCollections{
-		Tours:     db.Collection("tours"),
-		KeyPoints: db.Collection("keyPoints"),
+		Tours:            db.Collection("tours"),
+		KeyPoints:        db.Collection("keyPoints"),
+		CurrentLocations: db.Collection("currentLocations"),
 	}
 
 	return collections
@@ -69,7 +71,7 @@ func cors(next http.Handler) http.Handler {
 	})
 }
 
-func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyPointHandler) {
+func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyPointHandler, locationHandler *handler.CurrentLocationHandler) {
 	router := mux.NewRouter().StrictSlash(true)
 
 	//TOUR ENDPOINTS
@@ -88,6 +90,10 @@ func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyP
 	router.HandleFunc("/keyPoints/{id}", keyPointHandler.Delete).Methods("DELETE")
 	router.HandleFunc("/keyPoints/{id}", keyPointHandler.Update).Methods("PUT")
 	router.HandleFunc("/keyPoints/{id}/image", keyPointHandler.GetImage).Methods("GET")
+
+	//CURRENT LOCATION ENDPOINTS
+	router.HandleFunc("/simulator/location/{userId}", locationHandler.Get).Methods("GET")
+	router.HandleFunc("/simulator/location", locationHandler.Set).Methods("PUT")
 
 	router.Methods(http.MethodOptions).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
@@ -110,6 +116,10 @@ func main() {
 	keyPointRepository := &repository.KeyPointRepository{Collection: collections.KeyPoints}
 	keyPointService := &service.KeyPointService{KeyPointRepository: keyPointRepository}
 	keyPointHandler := &handler.KeyPointHandler{KeyPointService: keyPointService}
+	//CURRENT LOCATION
+	locationRepo := &repository.CurrentLocationRepository{Collection: collections.CurrentLocations}
+	locationService := &service.CurrentLocationService{Repo: locationRepo}
+	locationHandler := &handler.CurrentLocationHandler{Svc: locationService}
 
-	startServer(tourHandler, keyPointHandler)
+	startServer(tourHandler, keyPointHandler, locationHandler)
 }

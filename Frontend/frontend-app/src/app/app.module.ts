@@ -14,6 +14,9 @@ import { AdminPageComponent } from './admin-page/admin-page.component';
 import { ForbiddenComponent } from './forbbiden/forbbiden.component';
 import { BlogModule } from './blog/blog.module';
 import { TourModule } from './tour/tour.module';
+import { PositionSimComponent } from './tour/position-sim/position-sim.component';
+import { MatButtonModule } from '@angular/material/button';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 @NgModule({
   declarations: [
@@ -23,6 +26,7 @@ import { TourModule } from './tour/tour.module';
     ViewUserComponent,
     AdminPageComponent,
     ForbiddenComponent,
+    PositionSimComponent,
   ],
   imports: [
     BrowserModule,
@@ -32,6 +36,8 @@ import { TourModule } from './tour/tour.module';
     BrowserAnimationsModule,
     BlogModule,
     TourModule,
+    MatButtonModule,
+    MatSnackBarModule
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },

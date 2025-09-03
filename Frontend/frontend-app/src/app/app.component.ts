@@ -59,6 +59,9 @@ export class AppComponent {
       },
     });
   }
+  goToPositionSim() {
+    this.router.navigate(['/position-sim']);
+  }
 
   CreateBlog() {
     this.auth.whoAmI().subscribe({
