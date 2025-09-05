@@ -18,6 +18,8 @@ type CommentHandler struct {
 func (handler *CommentHandler) Create(writer http.ResponseWriter, req *http.Request) {
 	var comment model.Comment
 	err := json.NewDecoder(req.Body).Decode(&comment)
+	fmt.Printf("Handler: Create: %+v\n", comment.UserId)
+	println("Comment userId: ", comment.UserId)
 
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
@@ -25,6 +27,7 @@ func (handler *CommentHandler) Create(writer http.ResponseWriter, req *http.Requ
 	}
 	err = handler.CommentService.CreateComment(&comment)
 	if err != nil {
+		println(err.Error())
 		writer.WriteHeader(http.StatusExpectationFailed)
 		return
 	}
@@ -91,7 +94,7 @@ func (handler *CommentHandler) Delete(writer http.ResponseWriter, req *http.Requ
 }
 
 func (handler *CommentHandler) GetByBlogId(writer http.ResponseWriter, req *http.Request) {
-	idV := mux.Vars(req)["id"]
+	idV := mux.Vars(req)["blogId"]
 
 	id, err := uuid.Parse(idV)
 	if err != nil {

@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	"time"
 
 	"blog.xws.com/model"
 	"blog.xws.com/repository"
@@ -14,8 +13,7 @@ type CommentService struct {
 }
 
 func (service *CommentService) CreateComment(comment *model.Comment) error {
-	comment.DateOfCreation = time.Now()
-	err := service.CommentRepository.CreateComment(comment)
+	err := service.CommentRepository.CreateComment(model.CreateNewComment(comment.UserId, comment.BlogId, comment.Text))
 	if err != nil {
 		return err
 	}
@@ -40,10 +38,11 @@ func (service *CommentService) Delete(id uuid.UUID) error {
 }
 
 func (service *CommentService) GetByBlogId(id uuid.UUID) (*[]model.Comment, error) {
-	return service.CommentRepository.GetCommentsByBlogId(id)
+	return  service.CommentRepository.GetCommentsByBlogId(id)
 }
 
 func (service *CommentService) GetById(id uuid.UUID) (*model.Comment, error) {
+	println("Service: GetById:", id.String())
 	comment, err := service.CommentRepository.GetById(id)
 	if err != nil {
 		return nil, fmt.Errorf(fmt.Sprintf("Comment with id %s not found", id))

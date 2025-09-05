@@ -15,10 +15,11 @@ type Comment struct {
 	LastEdit       time.Time `json:"lastEdit" bson:"last_edit"`
 }
 
-func CreateNewComment(userId string, text string) Comment {
-	return Comment{
+func CreateNewComment(userId string, blogId string, text string) *Comment {
+	return &Comment{
 		ID:             uuid.New(),
 		UserId:         userId,
+		BlogId:         blogId,
 		DateOfCreation: time.Now(),
 		Text:           text,
 		LastEdit:       time.Now(),

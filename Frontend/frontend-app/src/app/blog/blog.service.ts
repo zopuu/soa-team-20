@@ -8,7 +8,7 @@ import { BlogDto } from './blog.dto';
   providedIn: 'root',
 })
 export class BlogService {
-  private apiUrl = 'http://localhost:7000/blogs';
+  private apiUrl = 'http://localhost:8080/blogs';
 
   constructor(private http: HttpClient) {}
 
