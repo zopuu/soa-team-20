@@ -18,6 +18,7 @@ import { TourModule } from './tour/tour.module';
 import { PositionSimComponent } from './tour/position-sim/position-sim.component';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { ListUsersComponent } from './users/list-users/list-users.component';
 
 @NgModule({
   declarations: [
@@ -25,6 +26,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
     HomeComponent,
     EditUserComponent,
     ViewUserComponent,
+    ListUsersComponent,
     AdminPageComponent,
     ForbiddenComponent,
     PositionSimComponent,

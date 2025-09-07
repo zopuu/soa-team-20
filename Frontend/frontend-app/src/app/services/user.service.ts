@@ -35,4 +35,8 @@ export class UserService {
   updateUser(id: number, payload: UpdateUserPayload): Observable<User> {
     return this.http.put<User>(`http://localhost:7000/api/users/updateUser/${id}`, payload);
   }
+
+  getAllUsers(): Observable<User[]> {
+    return this.http.get<User[]>(`http://localhost:5001/api/users/allUsers`);
+  }
 }

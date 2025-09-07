@@ -16,3 +16,7 @@ func (service *UserService) Update(userId int, updatedUser *model.User) (*model.
 func (service *UserService) GetById(userId int) (*model.User, error) {
 	return service.UserRepository.GetById(userId)
 }
+
+func (service *UserService) GetAllUsers() ([]model.User, error) {
+	return service.UserRepository.GetAllUsers()
+}

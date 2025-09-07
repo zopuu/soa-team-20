@@ -7,7 +7,7 @@ import { Like } from './like.model';
   providedIn: 'root'
 })
 export class LikeService {
-  private apiUrl = 'http://localhost:8080/blogs/likes';
+  private apiUrl = 'http://localhost:5100/blogs/likes';
 
   constructor(private http: HttpClient) {}
 

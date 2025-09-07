@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"time"
@@ -9,10 +10,13 @@ import (
 	tbchi "github.com/didip/tollbooth_chi"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/zopuu/soa-team-20/Backend/gateway/internal/config"
 	"github.com/zopuu/soa-team-20/Backend/gateway/internal/mw"
 	"github.com/zopuu/soa-team-20/Backend/gateway/internal/proxy"
+	followerspb "github.com/zopuu/soa-team-20/Backend/services/followers_service/proto/followerspb"
 )
 
 func main() {
@@ -67,11 +71,11 @@ func main() {
 	}
 
 	r.Group(func(pr chi.Router) {
-		pr.Route("/api/users",     func(rr chi.Router) { rr.Handle("/*", secure(stakeProxy)) })
-		pr.Route("/blogs",         func(rr chi.Router) { rr.Handle("/*", secure(blogProxy)) })
-		pr.Route("/tours",         func(rr chi.Router) { rr.Handle("/*", secure(tourProxy)) })
-		pr.Route("/keyPoints",     func(rr chi.Router) { rr.Handle("/*", secure(tourProxy)) })
-		pr.Route("/simulator",     func(rr chi.Router) { rr.Handle("/*", secure(tourProxy)) })
+		pr.Route("/api/users", func(rr chi.Router) { rr.Handle("/*", secure(stakeProxy)) })
+		pr.Route("/blogs", func(rr chi.Router) { rr.Handle("/*", secure(blogProxy)) })
+		pr.Route("/tours", func(rr chi.Router) { rr.Handle("/*", secure(tourProxy)) })
+		pr.Route("/keyPoints", func(rr chi.Router) { rr.Handle("/*", secure(tourProxy)) })
+		pr.Route("/simulator", func(rr chi.Router) { rr.Handle("/*", secure(tourProxy)) })
 	})
 
 	// ---------- gRPC placeholder (next sprint) ----------
@@ -81,6 +85,82 @@ func main() {
 	// r.Get("/api/bff/profile", func(w http.ResponseWriter, r *http.Request) { ... stakeClient.GetProfile(ctx, req) ... })
 	// ----------------------------------------------------
 
+	grpcConn, err := grpc.Dial(cfg.FollowersGRPCAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("failed to connect to followers service: %v", err)
+	}
+	defer grpcConn.Close()
+
+	followersClient := followerspb.NewFollowersServiceClient(grpcConn)
+
+	// REST -> gRPC mappings
+	r.Route("/api/followers", func(rr chi.Router) {
+		rr.Use(secure) // require JWT auth
+
+		rr.Post("/follow", func(w http.ResponseWriter, r *http.Request) {
+			var req struct {
+				UserID   string `json:"user_id"`
+				TargetID string `json:"target_id"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			resp, err := followersClient.Follow(r.Context(), &followerspb.FollowRequest{
+				UserId:   req.UserID,
+				TargetId: req.TargetID,
+			})
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			json.NewEncoder(w).Encode(resp)
+		})
+
+		rr.Post("/unfollow", func(w http.ResponseWriter, r *http.Request) {
+			var req struct {
+				UserID   string `json:"user_id"`
+				TargetID string `json:"target_id"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			resp, err := followersClient.Unfollow(r.Context(), &followerspb.FollowRequest{
+				UserId:   req.UserID,
+				TargetId: req.TargetID,
+			})
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			json.NewEncoder(w).Encode(resp)
+		})
+
+		rr.Get("/{id}/following", func(w http.ResponseWriter, r *http.Request) {
+			id := chi.URLParam(r, "id")
+			resp, err := followersClient.GetFollowing(r.Context(), &followerspb.UserRequest{UserId: id})
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			json.NewEncoder(w).Encode(resp)
+		})
+
+		rr.Get("/{id}/followers", func(w http.ResponseWriter, r *http.Request) {
+			id := chi.URLParam(r, "id")
+			resp, err := followersClient.GetFollowers(r.Context(), &followerspb.UserRequest{UserId: id})
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			json.NewEncoder(w).Encode(resp)
+		})
+	})
 	addr := ":" + cfg.Port
 	log.Printf("API Gateway listening on %s", addr)
 	log.Fatal(http.ListenAndServe(addr, r))

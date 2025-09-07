@@ -1,0 +1,13 @@
+<div class="users-wrapper">
+  <div class="user-card" *ngFor="let user of users">
+    <img [src]="user.ProfilePhoto || defaultProfileImage" alt="Profile" class="profile-img" />
+    <div class="user-info">
+      <div class="user-name">{{ user.FirstName }} {{ user.LastName }}</div>
+      <div class="user-role">{{ user.Role }}</div>
+    </div>
+    <button class="follow-btn" (click)="followUser(user)" [disabled]="false">
+      {{ true ? 'Following' : 'Follow' }}
+    </button>
+  </div>
+  <div *ngIf="users.length === 0" class="no-users">No users to show.</div>
+</div>
