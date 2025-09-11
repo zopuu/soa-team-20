@@ -11,7 +11,7 @@ services:
             - "5000:8080"
         environment:
             ASPNETCORE_ENVIRONMENT: Development
-            ConnectionStrings__DefaultConnection: "Host=auth-db;Port=5432;Database=auth;Username=postgres;Password=password"
+            ConnectionStrings__DefaultConnection: "Host=auth-db;Port=5432;Database=auth;Username=postgres;Password=123"
         depends_on:
             - auth-db
 
@@ -21,7 +21,7 @@ services:
         environment:
             POSTGRES_DB: auth
             POSTGRES_USER: postgres
-            POSTGRES_PASSWORD: password
+            POSTGRES_PASSWORD: 123
         ports:
             - "55432:5432"
         volumes:
@@ -39,7 +39,7 @@ services:
         environment:
             USER_DB_HOST: auth-db
             USER_DB_USER: postgres
-            USER_DB_PASS: password
+            USER_DB_PASS: 123
             USER_DB_NAME: auth
             USER_DB_PORT: "5432"
             USER_SERVICE_PORT:
@@ -95,6 +95,31 @@ services:
             - "27018:27017"
         volumes:
             - tour-data:/data/db
+
+    gateway:
+        build:
+            context: ./gateway
+            dockerfile: Dockerfile
+        image: gateway:latest
+        container_name: gateway
+        ports:
+            - "7000:7000"
+        environment:
+            GATEWAY_PORT: "7000"
+            AUTH_BASE: "http://auth:8080"
+            STAKE_BASE: "http://stakeholders:8080"
+            BLOG_BASE: "http://blogservice:8080"
+            TOUR_BASE: "http://tourservice:8080"
+            JWT_SECRET: "aiugbherajndfuieajdvnaiuerkjdfnaeui"
+            JWT_ISSUER: "AuthService"
+            JWT_AUDIENCE: "AuthServiceClient"
+            CORS_ORIGINS: "http://localhost:4200,http://localhost:5173"
+        depends_on:
+            - auth
+            - stakeholders
+            - blogservice
+            - tourservice
+
 
 volumes:
     auth_data:

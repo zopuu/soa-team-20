@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
 import { KeypointService } from '../keypoint.service';
 import { Tour, TourStatus, TransportType } from '../tour.model';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-list-tours',
@@ -11,6 +12,7 @@ import { Tour, TourStatus, TransportType } from '../tour.model';
   styleUrls: ['./list-tours.component.css'],
 })
 export class ListToursComponent {
+
   // Helper functions to convert string enums to numbers for backend
   private statusToNumber(status: string): number {
     switch (status) {
@@ -61,12 +63,24 @@ export class ListToursComponent {
   currentUserRole?: string;
   isMyTours = false;
 
+  showRateModal = false;
+  selectedTourId?: string;
+  reviewForm!: FormGroup;
+  selectedImages: File[] = [];
+  submittingReview = false;
+
+  // (opciono) auto-popuna iz whoAmI
+  userFullName?: string;
+  userEmail?: string;
+
+
   constructor(
     private route: ActivatedRoute,
     private tourService: TourService,
     private router: Router,
     private auth: AuthService,
-    private keypointService: KeypointService
+    private keypointService: KeypointService,
+    private fb: FormBuilder,
   ) {}
 
   ngOnInit() {
@@ -164,6 +178,65 @@ export class ListToursComponent {
     if (!tourId) return;
     this.router.navigate(['/tours', 'view', tourId]);
   }
+
+rateTour(tourId: string) {
+  if (!tourId) return;
+  this.selectedTourId = tourId;
+
+  const todayISO = new Date().toISOString().slice(0, 10); // yyyy-mm-dd
+
+  this.reviewForm = this.fb.group({
+    rating: [5],
+    comment: [''],
+    touristName: [this.userFullName ?? ''],
+    touristEmail: [this.userEmail ?? ''],
+    visitedAt: [todayISO],
+    commentedAt: [todayISO]
+  });
+
+  this.selectedImages = [];
+  this.showRateModal = true;
+}
+
+closeRateModal() {
+  this.showRateModal = false;
+  this.selectedTourId = undefined;
+  this.selectedImages = [];
+}
+
+onFileChange(evt: Event) {
+  const input = evt.target as HTMLInputElement;
+  if (!input.files) return;
+  this.selectedImages = Array.from(input.files);
+}
+
+submitReview() {
+  if (!this.selectedTourId) return;
+  this.submittingReview = true;
+  console.log('test');
+  const payload = {
+    rating: this.reviewForm.value.rating,
+    comment: this.reviewForm.value.comment,
+    touristName: this.reviewForm.value.touristName,
+    touristEmail: this.reviewForm.value.touristEmail,
+    visitedAt: this.reviewForm.value.visitedAt,
+    commentedAt: this.reviewForm.value.commentedAt
+  };
+
+  this.tourService.createReview(this.selectedTourId, payload).subscribe({
+    next: () => {
+      this.submittingReview = false;
+      this.closeRateModal();
+    },
+    error: (err) => {
+      console.error('Slanje recenzije neuspešno', err);
+      this.submittingReview = false;
+      alert('Nismo uspeli da sačuvamo recenziju. Pokušaj ponovo.');
+    }
+  });
+}
+
+
 
   confirmDelete(tourId: string) {
     if (!tourId) return;

@@ -36,6 +36,7 @@ import { MapPickerDialogComponent } from './map-picker-dialog/map-picker-dialog.
     MatDialogModule,
     MatSelectModule,
     MatCheckboxModule,
+    ReactiveFormsModule
   ],
 })
 export class TourModule {}

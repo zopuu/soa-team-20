@@ -35,4 +35,23 @@ export class TourService {
   getAllByUser(userId: string): Observable<Tour[]> {
     return this.http.get<any[]>(`${this.apiUrl}/users/${userId}`);
   }
+
+createReview(
+  tourId: string,
+  review: {
+    rating: number;
+    comment?: string;
+    touristName?: string;
+    touristEmail?: string;
+    visitedAt?: string;    // yyyy-mm-dd
+    commentedAt?: string;  // yyyy-mm-dd
+  }
+): Observable<any> {
+  return this.http.post(`${this.apiUrl}/${tourId}/reviews`, review);
+}
+
+
+  getReviews(tourId: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/${tourId}/reviews`);
+  }
 }

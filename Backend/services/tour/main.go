@@ -19,6 +19,7 @@ type MongoCollections struct {
 	Tours            *mongo.Collection
 	KeyPoints        *mongo.Collection
 	CurrentLocations *mongo.Collection
+	Ratings 		 *mongo.Collection
 }
 
 func initMongoDB() MongoCollections {
@@ -45,6 +46,7 @@ func initMongoDB() MongoCollections {
 		Tours:            db.Collection("tours"),
 		KeyPoints:        db.Collection("keyPoints"),
 		CurrentLocations: db.Collection("currentLocations"),
+		Ratings: 		  db.Collection("tour_ratings"),
 	}
 
 	return collections
@@ -71,7 +73,7 @@ func cors(next http.Handler) http.Handler {
 	})
 }
 
-func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyPointHandler, locationHandler *handler.CurrentLocationHandler) {
+func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyPointHandler, locationHandler *handler.CurrentLocationHandler, ratingHandler *handler.TourRatingHandler) {
 	router := mux.NewRouter().StrictSlash(true)
 
 	//TOUR ENDPOINTS
@@ -82,6 +84,8 @@ func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyP
 	router.HandleFunc("/tours/{id}", tourHandler.Delete).Methods("DELETE")
 	router.HandleFunc("/tours/{id}", tourHandler.Update).Methods("PUT")
 
+	router.HandleFunc("/tours/{id}/reviews", ratingHandler.Create).Methods("POST")
+	router.HandleFunc("/tours/{id}/reviews", ratingHandler.GetByTour).Methods("GET")
 	//KEYPOINT ENDPOINTS
 	router.HandleFunc("/keyPoints", keyPointHandler.GetAll).Methods("GET")
 	router.HandleFunc("/keyPoints/tours/{tourId}", keyPointHandler.GetAllByTour).Methods("GET")
@@ -120,6 +124,9 @@ func main() {
 	locationRepo := &repository.CurrentLocationRepository{Collection: collections.CurrentLocations}
 	locationService := &service.CurrentLocationService{Repo: locationRepo}
 	locationHandler := &handler.CurrentLocationHandler{Svc: locationService}
-
-	startServer(tourHandler, keyPointHandler, locationHandler)
+	//RATINGS
+	ratingRepo := &repository.TourRatingRepository{Collection: collections.Ratings}
+  	ratingService := &service.TourRatingService{Repo: ratingRepo}
+  	ratingHandler := &handler.TourRatingHandler{RatingService: ratingService}
+	startServer(tourHandler, keyPointHandler, locationHandler, ratingHandler)
 }
