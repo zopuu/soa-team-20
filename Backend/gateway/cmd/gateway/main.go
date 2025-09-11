@@ -10,6 +10,7 @@ import (
 	tbchi "github.com/didip/tollbooth_chi"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -54,6 +55,12 @@ func main() {
 		Target: cfg.TourBase, StripPrefix: "", DialTimeout: cfg.DialTimeout, ProxyTimeout: cfg.ProxyTimeout,
 	})
 
+	logProxy := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Gateway forwarding request: %s %s from %s", r.Method, r.URL.Path, r.RemoteAddr)
+		log.Printf("Forwarding to %s%s", cfg.StakeBase, r.URL.Path)
+		stakeProxy.ServeHTTP(w, r) // forward to users service
+	})
+
 	// Health
 	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("ok"))
@@ -67,11 +74,14 @@ func main() {
 
 	// Everything else requires JWT
 	secure := func(h http.Handler) http.Handler {
-		return mw.AuthRequired(jwtCfg)(h)
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			log.Printf("Request secured with JWT middleware: %s", r.Header.Get("Authorization"))
+			mw.AuthRequired(jwtCfg)(h).ServeHTTP(w, r)
+		})
 	}
 
 	r.Group(func(pr chi.Router) {
-		pr.Route("/api/users", func(rr chi.Router) { rr.Handle("/*", secure(stakeProxy)) })
+		pr.Route("/api/users", func(rr chi.Router) { rr.Handle("/*", secure(logProxy)) })
 		pr.Route("/blogs", func(rr chi.Router) { rr.Handle("/*", secure(blogProxy)) })
 		pr.Route("/tours", func(rr chi.Router) { rr.Handle("/*", secure(tourProxy)) })
 		pr.Route("/keyPoints", func(rr chi.Router) { rr.Handle("/*", secure(tourProxy)) })
@@ -85,6 +95,7 @@ func main() {
 	// r.Get("/api/bff/profile", func(w http.ResponseWriter, r *http.Request) { ... stakeClient.GetProfile(ctx, req) ... })
 	// ----------------------------------------------------
 
+	// Connect to Followers gRPC service
 	grpcConn, err := grpc.Dial(cfg.FollowersGRPCAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("failed to connect to followers service: %v", err)
@@ -99,8 +110,8 @@ func main() {
 
 		rr.Post("/follow", func(w http.ResponseWriter, r *http.Request) {
 			var req struct {
-				UserID   string `json:"user_id"`
-				TargetID string `json:"target_id"`
+				FollowerId string `json:"user_id"`
+				FolloweeId string `json:"target_id"`
 			}
 			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
@@ -108,9 +119,10 @@ func main() {
 			}
 
 			resp, err := followersClient.Follow(r.Context(), &followerspb.FollowRequest{
-				UserId:   req.UserID,
-				TargetId: req.TargetID,
+				FollowerId: req.FollowerId,
+				FolloweeId: req.FolloweeId,
 			})
+			log.Printf("Connected: %v", resp)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -130,8 +142,8 @@ func main() {
 			}
 
 			resp, err := followersClient.Unfollow(r.Context(), &followerspb.FollowRequest{
-				UserId:   req.UserID,
-				TargetId: req.TargetID,
+				FollowerId: req.UserID,
+				FolloweeId: req.TargetID,
 			})
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -160,7 +172,18 @@ func main() {
 			}
 			json.NewEncoder(w).Encode(resp)
 		})
+
+		rr.Get("/recommendations/{id}", func(w http.ResponseWriter, r *http.Request) {
+			id := chi.URLParam(r, "id")
+			resp, err := followersClient.GetRecommendations(r.Context(), &followerspb.UserRequest{UserId: id})
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			json.NewEncoder(w).Encode(resp)
+		})
 	})
+
 	addr := ":" + cfg.Port
 	log.Printf("API Gateway listening on %s", addr)
 	log.Fatal(http.ListenAndServe(addr, r))

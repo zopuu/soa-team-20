@@ -8,7 +8,7 @@ import { BlogDto } from './blog.dto';
   providedIn: 'root',
 })
 export class BlogService {
-  private apiUrl = 'http://localhost:5100/blogs';
+  private apiUrl = 'http://localhost:7000/blogs';
 
   constructor(private http: HttpClient) {}
 
@@ -57,7 +57,4 @@ export class BlogService {
     return this.http.get<Blog[]>(`${this.apiUrl}/users/${userId}`);
   }
 
-  /*getAllFromFollowedUsers(userId: string): Observable<Blog[]> {
-    //return this.http.get<Blog[]>(`${this.apiUrl}/feed/${userId}`);
-  }*/
 }

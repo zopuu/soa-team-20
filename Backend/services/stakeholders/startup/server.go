@@ -64,6 +64,7 @@ func (server *Server) Start() {
 		AllowedOrigins: []string{
 			"http://localhost:4200",
 			"http://frontend:80",
+			"http://localhost:7000",
 		},
 		AllowedMethods: []string{
 			http.MethodGet,

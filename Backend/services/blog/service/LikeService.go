@@ -2,6 +2,7 @@ package service
 
 import (
 	//"fmt"
+	"log"
 	"time"
 
 	"blog.xws.com/model"
@@ -14,7 +15,10 @@ type LikeService struct {
 
 func (service *LikeService) CreateLike(like *model.Like) error {
 	like.DateOfCreation = time.Now()
-	err := service.LikeRepository.CreateLike(like)
+
+	err := service.LikeRepository.CreateLike(model.CreateNewLike(like.UserId, like.BlogId))
+	log.Println("Creating like:", err)
+	log.Println("Creating like object:", like)
 	if err != nil {
 		return err
 	}

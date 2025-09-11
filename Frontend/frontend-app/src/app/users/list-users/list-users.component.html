@@ -1,12 +1,36 @@
+<!-- Recommendations Section -->
+<div class="recommendations-wrapper">
+  <h3>People you may know</h3>
+  <div style="text-align: center;" *ngIf="recommendedUsers.length === 0">No recommendations</div>
+  <div class="user-card" *ngFor="let user of recommendedUsers">
+    <img [src]="user.ProfilePhoto || defaultProfileImage" alt="Profile" class="profile-img" />
+    <div class="user-info">
+      <div class="user-name">{{ user.Username }} {{ user.LastName }}</div>
+      <div class="user-role">{{ user.Role }}</div>
+    </div>
+    <button
+      class="follow-btn"
+      [ngClass]="{ 'unfollow': followees.has(user) }"
+      (click)="followees.has(user) ? unfollowUser(user) : followUser(user)"
+      [disabled]="false">
+      {{ followees.has(user) ? 'Unfollow' : 'Follow' }}
+    </button>
+  </div>
+</div>
+
 <div class="users-wrapper">
   <div class="user-card" *ngFor="let user of users">
     <img [src]="user.ProfilePhoto || defaultProfileImage" alt="Profile" class="profile-img" />
     <div class="user-info">
-      <div class="user-name">{{ user.FirstName }} {{ user.LastName }}</div>
+      <div class="user-name">{{ user.Username }} {{ user.LastName }}</div>
       <div class="user-role">{{ user.Role }}</div>
     </div>
-    <button class="follow-btn" (click)="followUser(user)" [disabled]="false">
-      {{ true ? 'Following' : 'Follow' }}
+    <button
+      class="follow-btn"
+      [ngClass]="{ 'unfollow': followees.has(user) }"
+      (click)="followees.has(user) ? unfollowUser(user) : followUser(user)"
+      [disabled]="false">
+      {{ followees.has(user) ? 'Unfollow' : 'Follow' }}
     </button>
   </div>
   <div *ngIf="users.length === 0" class="no-users">No users to show.</div>

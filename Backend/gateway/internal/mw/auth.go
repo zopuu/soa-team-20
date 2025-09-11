@@ -1,6 +1,7 @@
 package mw
 
 import (
+	"log"
 	"net/http"
 	"strings"
 
@@ -41,7 +42,11 @@ func AuthOptional(cfg JWTConfig) func(http.Handler) http.Handler {
 						switch v := roles.(type) {
 						case []any:
 							var s []string
-							for _, it := range v { if str, ok := it.(string); ok { s = append(s, str) } }
+							for _, it := range v {
+								if str, ok := it.(string); ok {
+									s = append(s, str)
+								}
+							}
 							r.Header.Set("X-Roles", strings.Join(s, ","))
 						case string:
 							r.Header.Set("X-Roles", v)
@@ -68,6 +73,7 @@ func AuthRequired(cfg JWTConfig) func(http.Handler) http.Handler {
 				return cfg.Secret, nil
 			}, jwt.WithAudience(cfg.Audience), jwt.WithIssuer(cfg.Issuer))
 			if err != nil {
+				log.Printf("JWT parse error: %v", err) // Add this line
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}

@@ -57,6 +57,19 @@
   transition: background 0.2s;
 }
 
+.recommendations-wrapper {
+  margin-bottom: 2rem;
+}
+.recommendations-wrapper h3 {
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.follow-btn.unfollow {
+  background: #e53e3e; /* red */
+  color: #fff;
+}
+
 .follow-btn:disabled,
 .follow-btn[disabled] {
   background: #bbb;

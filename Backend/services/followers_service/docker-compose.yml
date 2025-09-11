@@ -1,9 +1,9 @@
 version: "3.9"
 
 services:
-  followers-db:
+  followers-dbb:
     image: neo4j:5
-    container_name: followers-neo4j
+    container_name: followers-neo4j-dev
     restart: always
     ports:
       - "7688:7687"
@@ -20,7 +20,7 @@ services:
       context: .  # path to your Dockerfile
     container_name: followers-service
     depends_on:
-      - followers-db
+      - followers-dbb
     ports:
       - "50051:50051"
     networks:

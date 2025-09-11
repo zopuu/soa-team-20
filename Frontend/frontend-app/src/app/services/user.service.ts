@@ -29,14 +29,14 @@ export class UserService {
   constructor(private http: HttpClient) {}
 
   getById(id: number): Observable<User> {
-    return this.http.get<User>(`http://localhost:7000/api/users/userById/${id}`);
+    return this.http.get<User>(`http://localhost:7001/api/users/userById/${id}`);
   }
 
   updateUser(id: number, payload: UpdateUserPayload): Observable<User> {
-    return this.http.put<User>(`http://localhost:7000/api/users/updateUser/${id}`, payload);
+    return this.http.put<User>(`http://localhost:7001/api/users/updateUser/${id}`, payload);
   }
 
   getAllUsers(): Observable<User[]> {
-    return this.http.get<User[]>(`http://localhost:5001/api/users/allUsers`);
+    return this.http.get<User[]>(`http://localhost:7000/api/users/allUsers`);
   }
 }

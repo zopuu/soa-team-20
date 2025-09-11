@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/zopuu/soa-team-20/Backend/services/followers_service/proto/followerspb"
@@ -17,6 +18,7 @@ func (s *FollowersServer) Follow(ctx context.Context, req *followerspb.FollowReq
 	session := s.Driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close(ctx)
 
+	fmt.Println("GOT REQUEST", req.FollowerId, req.FolloweeId)
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx,
 			`MERGE (a:User {id: $followerId})
@@ -28,6 +30,7 @@ func (s *FollowersServer) Follow(ctx context.Context, req *followerspb.FollowReq
 			})
 		return nil, err
 	})
+	fmt.Println("RESPONSE FROM DB", err)
 	if err != nil {
 		return &followerspb.FollowResponse{Success: false}, err
 	}

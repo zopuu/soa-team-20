@@ -1,8 +1,6 @@
 module github.com/zopuu/soa-team-20/Backend/gateway
 
-go 1.23.0
-
-toolchain go1.24.4
+go 1.24.4
 
 require (
 	github.com/didip/tollbooth/v7 v7.0.2
@@ -10,6 +8,8 @@ require (
 	github.com/go-chi/chi/v5 v5.0.12
 	github.com/go-chi/cors v1.2.1
 	github.com/golang-jwt/jwt/v5 v5.2.1
+	github.com/zopuu/soa-team-20/Backend/services/followers_service v0.0.0-00010101000000-000000000000
+	google.golang.org/grpc v1.75.0
 )
 
 require (
@@ -18,6 +18,7 @@ require (
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/text v0.26.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250707201910-8d1bb00bc6a7 // indirect
-	google.golang.org/grpc v1.75.0 // indirect
 	google.golang.org/protobuf v1.36.8 // indirect
 )
+
+replace github.com/zopuu/soa-team-20/Backend/services/followers_service => ../services/followers_service
