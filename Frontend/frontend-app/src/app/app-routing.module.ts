@@ -13,6 +13,7 @@ import { CreateKeypointComponent } from './tour/create-keypoint/create-keypoint.
 import { ListToursComponent } from './tour/list-tours/list-tours.component';
 import { ViewTourComponent } from './tour/view-tour/view-tour.component';
 import { PositionSimComponent } from './tour/position-sim/position-sim.component';
+import { ListUsersComponent } from './users/list-users/list-users.component';
 
 const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -22,6 +23,7 @@ const routes: Routes = [
   },
   { path: 'users/:id/edit', component: EditUserComponent },
   { path: 'users/:id/view', component: ViewUserComponent },
+  { path: 'users/list-all', component: ListUsersComponent },
   { path: 'admin', component: AdminPageComponent, canActivate: [AdminGuard] },
   { path: 'forbidden', component: ForbiddenComponent },
   { path: 'blogs', component: ListBlogsComponent },

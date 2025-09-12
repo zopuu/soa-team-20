@@ -8,12 +8,14 @@ services:
         container_name: "authService"
         image: authservice:latest
         ports:
-            - "5000:8080"
+            - "7001:8080"
         environment:
             ASPNETCORE_ENVIRONMENT: Development
             ConnectionStrings__DefaultConnection: "Host=auth-db;Port=5432;Database=auth;Username=postgres;Password=123"
         depends_on:
             - auth-db
+        networks:
+            - backend
 
     auth-db:
         image: postgres:15
@@ -23,9 +25,11 @@ services:
             POSTGRES_USER: postgres
             POSTGRES_PASSWORD: 123
         ports:
-            - "55432:5432"
+            - "65432:5432"
         volumes:
             - auth_data:/var/lib/postgresql/data
+        networks:
+            - backend
 
     # Go stakeholders service (no new DB)
     stakeholders:
@@ -51,6 +55,8 @@ services:
         depends_on:
             - auth
             - auth-db
+        networks:
+            - backend
 
     blogservice:
         build:
@@ -64,6 +70,8 @@ services:
             - MONGO_URI=mongodb://blogmongodb:27017
         depends_on:
             - blogmongodb
+        networks:
+            - backend
 
     blogmongodb:
         image: mongo:6
@@ -73,6 +81,8 @@ services:
             - "27017:27017"
         volumes:
             - blog-data:/data/db
+        networks:
+            - backend
 
     tourservice:
         build:
@@ -96,32 +106,68 @@ services:
         volumes:
             - tour-data:/data/db
 
+    followers-service:
+        build:
+            context: ./services/followers_service
+            dockerfile: Dockerfile
+        container_name: followers-service
+        ports:
+            - "50051:50051"
+        environment:
+            - NEO4J_URI=bolt://followers-db:7687
+            - NEO4J_USER=neo4j
+            - NEO4J_PASSWORD=followersPass   # match the one in followers_neo4j
+        depends_on:
+            - followers-db
+        networks:
+            - backend
+
+    followers-db:
+        image: neo4j:5
+        container_name: followers-db
+        ports:
+            - "7475:7474"
+            - "7688:7687"
+        environment:
+            - NEO4J_AUTH=neo4j/followersPass
+        volumes:
+            - followers_neo4j_data:/data
+        networks:
+            - backend
+
     gateway:
         build:
-            context: ./gateway
-            dockerfile: Dockerfile
-        image: gateway:latest
+            context: .
+            dockerfile: gateway/Dockerfile   # must exist in Backend/gateway
         container_name: gateway
         ports:
-            - "7000:7000"
+            - "7000:7000"   # expose API Gateway on localhost:7000
         environment:
-            GATEWAY_PORT: "7000"
-            AUTH_BASE: "http://auth:8080"
-            STAKE_BASE: "http://stakeholders:8080"
-            BLOG_BASE: "http://blogservice:8080"
-            TOUR_BASE: "http://tourservice:8080"
-            JWT_SECRET: "aiugbherajndfuieajdvnaiuerkjdfnaeui"
-            JWT_ISSUER: "AuthService"
-            JWT_AUDIENCE: "AuthServiceClient"
-            CORS_ORIGINS: "http://localhost:4200,http://localhost:5173"
+            - GATEWAY_PORT=7000
+            - AUTH_BASE=http://auth:8080          # match service name + container port
+            - STAKE_BASE=http://stakeholders:8080
+            - BLOG_BASE=http://blogservice:8080
+            - TOUR_BASE=http://tourservice:8080
+            - FOLLOWERS_GRPC_ADDR=followers-service:50051
+            - JWT_SECRET=aiugbherajndfuieajdvnaiuerkjdfnaeui
+            - JWT_ISSUER=AuthService
+            - JWT_AUDIENCE=AuthServiceClient
+            - CORS_ORIGINS=http://localhost:4200
         depends_on:
             - auth
             - stakeholders
             - blogservice
             - tourservice
-
+            - followers-service
+        networks:
+            - backend
 
 volumes:
     auth_data:
     blog-data:
     tour-data:
+    followers_neo4j_data:
+
+networks:
+    backend:
+        driver: bridge

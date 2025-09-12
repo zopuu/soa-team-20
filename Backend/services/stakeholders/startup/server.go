@@ -58,11 +58,13 @@ func (server *Server) Start() {
 
 	router.HandleFunc("/api/users/userById/{id}", userHandler.GetById).Methods(http.MethodGet)
 	router.HandleFunc("/api/users/updateUser/{id}", userHandler.UpdateUser).Methods(http.MethodPut)
+	router.HandleFunc("/api/users/allUsers", userHandler.GetAllUsers).Methods(http.MethodGet)
 
 	c := cors.New(cors.Options{
 		AllowedOrigins: []string{
 			"http://localhost:4200",
-			"http://frontend:80",    
+			"http://frontend:80",
+			"http://localhost:7000",
 		},
 		AllowedMethods: []string{
 			http.MethodGet,

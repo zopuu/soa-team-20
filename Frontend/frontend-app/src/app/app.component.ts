@@ -59,6 +59,9 @@ export class AppComponent {
       },
     });
   }
+  goToUsersList() {
+    this.router.navigate(['/users/list-all']);
+  }
   goToPositionSim() {
     this.router.navigate(['/position-sim']);
   }

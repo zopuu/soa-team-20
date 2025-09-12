@@ -12,6 +12,7 @@ import { Like } from '../like.model';
 import { LikeService } from '../like.service';
 import { Comment } from '../comment.model';
 import { AuthService } from 'src/app/auth/auth.service';
+import { FollowersService } from 'src/app/services/followers.service';
 
 @Component({
   selector: 'app-blog-list',
@@ -24,6 +25,7 @@ export class ListBlogsComponent implements OnChanges {
   blogs: Blog[] = [];
   loading = false;
   error = '';
+  usersBlogsNumber = 0;
   // Map blogId to comments array
   blogComments: { [blogId: string]: Comment[] } = {};
   blogLikes: { [blogId: string]: Like[] } = {};
@@ -34,12 +36,14 @@ export class ListBlogsComponent implements OnChanges {
     private commentService: CommentService,
     private likeService: LikeService,
     private authService: AuthService,
+    private followersService: FollowersService,
   ) {}
 
   ngOnInit() {
   this.authService.whoAmI().subscribe(user => {
     this.userId = user.id.toString(); // This is the logged-in user's ID
     // Use currentUserId as needed
+    this.load();
   });
 }
   ngOnChanges(_: SimpleChanges): void {
@@ -63,7 +67,53 @@ export class ListBlogsComponent implements OnChanges {
   private load(): void {
     this.loading = true;
     this.error = '';
-    const req$ = this.userId
+    if(!this.userId) return;
+    this.followersService.getFollowees(this.userId.toString()).subscribe({ next: (result) => {
+      console.log("Followees result: ", result);
+      if(result.user_ids && Array.isArray(result.user_ids)){
+        
+        console.log("Followees including self: ", result.user_ids);
+        result.user_ids.forEach((f: any) => {
+          this.blogService.getAllByUser(f.toString()).subscribe(followeeBlogs => {
+            this.blogs = this.blogs.concat(followeeBlogs || []);
+          });
+          
+
+          
+           
+          
+        });
+
+        
+
+        
+      }
+        if(this.userId){
+        this.blogService.getAllByUser(this.userId).subscribe(followeeBlogs => {
+              this.blogs = this.blogs.concat(followeeBlogs || []);
+              this.usersBlogsNumber = followeeBlogs.length;
+              
+              // Fetch comments for each blog
+            this.blogs.forEach(blog => {
+              this.loadComments(blog.id);
+              this.loadLikes(blog.id);});
+            }
+          );
+             
+            }
+        this.loading = false;
+        
+    },
+    error: (err) => {
+        console.error('Failed to load followees', err);
+      }
+  }
+    
+    );
+    
+  
+
+    /*const req$ = this.userId
       ? this.blogService.getAllByUser(this.userId)
       : this.blogService.getAllBlogs();
 
@@ -82,7 +132,7 @@ export class ListBlogsComponent implements OnChanges {
         this.error = 'Failed to load blogs.';
         this.loading = false;
       },
-    });
+    });*/
   }
   loadComments(blogId: string) {
     console.log("Loading comments for blog:", blogId);
@@ -106,8 +156,9 @@ export class ListBlogsComponent implements OnChanges {
         this.blogLikes[blogId] = [];
       }
     });
+    console.log("Blog likes:", this.blogLikes);
   }
-
+  
   hasLiked(blog: Blog): boolean {
   const likes = this.blogLikes[blog.id] || [];
   return likes.some(like => like.userId === this.userId);
@@ -123,14 +174,24 @@ toggleLike(blog: Blog) {
     });
   } else if(this.userId) {
     // Like
-    this.likeService.createLike({ blogId: blog.id, userId: this.userId }).subscribe({
+    this.likeService.createLike({ userId: this.userId, blogId: blog.id }).subscribe({
       next: (newLike) => {
         this.blogLikes[blog.id] = [...(this.blogLikes[blog.id] || []), newLike];
       }
     });
   }
 }
-
+delete(blog: Blog) {
+    this.blogService.delete(blog.id).subscribe({
+      next: () => { 
+        console.log("Deleted blog:", blog.id);
+        this.blogs = this.blogs.filter(b => b.id !== blog.id);
+      },
+      error: (err) => {
+        console.error("Failed to delete blog:", err);
+      }
+    });
+  }
   addComment(blog: Blog) {
     const text = this.newCommentText[blog.id];
     if (!text) return;
@@ -151,3 +212,5 @@ toggleLike(blog: Blog) {
 
   trackById = (_: number, b: Blog) => b.id;
 }
+  
+      

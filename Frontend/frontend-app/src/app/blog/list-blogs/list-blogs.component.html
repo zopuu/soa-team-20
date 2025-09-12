@@ -3,6 +3,7 @@
   <ng-template #allTitle><h2>All Blogs</h2></ng-template>
 
   <div class="state" *ngIf="loading">Loading…</div>
+  <div class="state" *ngIf="!loading && blogs.length === 0">Follow people to see their blogs.</div>
   <div class="state error" *ngIf="error">{{ error }}</div>
 
   <div class="blog-list" *ngIf="!loading && !error">
@@ -13,13 +14,17 @@
         <span>{{ b.date_of_creation | date : "medium" }}</span>
         <span> • by {{ b.userId }}</span>
       </div>
-
+      <button
+          (click)="delete(b)"
+          [disabled]="false">
+          Delete
+        </button>
       <div class="images" *ngIf="b.images?.length">
         <div class="image-gallery">
           <!-- <img
             *ngFor="let img of b.images; let i = index"
-            [src]="createImageDataUrl(img.data || '', img.mimeType || '')"
-            [alt]="img.filename || 'Blog image '"
+            [src]="createImageDataUrl(img || '', img || '')"
+            [alt]="img || 'Blog image '"
             class="blog-image"
             (error)="onImageError($event)"
           /> -->
@@ -38,8 +43,8 @@
       </div>
 
       <div class="comments">
-  <h4>Comments ({{ blogComments[b.id]?.length! || 0 }})</h4>
-  <div *ngIf="blogComments[b.id]?.length; else noComments">
+  <h4>Comments ({{ blogComments[b.id]?.length || 0 }})</h4>
+  <div *ngIf="blogComments[b.id] && blogComments[b.id].length > 0; else noComments">
     <div class="comment" *ngFor="let c of blogComments[b.id]">
       <strong>{{ c.userId }}</strong>: {{ c.text }}
       <span style="font-size:0.8em;color:#888;">({{ c.dateOfCreation | date:'short' }})</span>
@@ -65,4 +70,5 @@
 
     <div *ngIf="blogs.length === 0" class="state">No blogs found.</div>
   </div>
+  <div class="state" *ngIf="!loading && blogs.length === usersBlogsNumber">Follow people to see their blogs.</div>
 </div>

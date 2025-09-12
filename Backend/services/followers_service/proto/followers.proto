@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package followers;
+
+// IMPORTANT: update this to your module path if you changed $MODULE above.
+option go_package = "github.com/zopuu/soa-team-20/Backend/services/followers_service/proto/followerspb;followerspb";
+
+service FollowersService {
+  rpc Follow(FollowRequest) returns (FollowResponse);
+  rpc Unfollow(FollowRequest) returns (FollowResponse);
+  rpc GetFollowing(UserRequest) returns (UsersResponse);
+  rpc GetFollowers(UserRequest) returns (UsersResponse);
+  rpc GetRecommendations(UserRequest) returns (UsersResponse);
+}
+
+message FollowRequest {
+  string follower_id = 1;
+  string followee_id = 2;
+}
+
+message FollowResponse {
+  bool success = 1;
+}
+
+message UserRequest {
+  string user_id = 1;
+}
+
+message UsersResponse {
+  repeated string user_ids = 1;
+}

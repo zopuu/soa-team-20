@@ -19,7 +19,7 @@ func (repo *LikeRepository) CreateLike(like *model.Like) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-
+	println("Creating like for user ID:", like.UserId, "and blog ID:", like.BlogId)
 	_, err := repo.Collection.InsertOne(ctx, like)
 	return err
 }
@@ -38,7 +38,9 @@ func (repo *LikeRepository) GetById(id uuid.UUID) (model.Like, error) {
 
 func (repo *LikeRepository) DeleteLike(userId string, blogId string) error {
 
-	res, err := repo.Collection.DeleteOne(context.TODO(), bson.M{"user_id": userId, "blog_id": blogId})
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	res, err := repo.Collection.DeleteOne(ctx, bson.M{"userId": userId, "blogId": blogId})
 	if err != nil {
 		return err
 	}
@@ -52,7 +54,7 @@ func (repo *LikeRepository) GetLikesByBlogId(blogId string) (*[]model.Like, erro
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	filter := bson.M{"blog_id": blogId}
+	filter := bson.M{"blogId": blogId}
 
 	cursor, err := repo.Collection.Find(ctx, filter)
 	if err != nil {
@@ -64,6 +66,6 @@ func (repo *LikeRepository) GetLikesByBlogId(blogId string) (*[]model.Like, erro
 	if err = cursor.All(ctx, &likes); err != nil {
 		return nil, err
 	}
-
+	println("Number of likes found:", "user ID:", likes[0].UserId, "length:", len(likes), "blog Id:", likes[0].BlogId)
 	return &likes, nil
 }

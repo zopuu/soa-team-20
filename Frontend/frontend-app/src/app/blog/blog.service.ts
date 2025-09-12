@@ -56,4 +56,5 @@ export class BlogService {
   getAllByUser(userId: string): Observable<Blog[]> {
     return this.http.get<Blog[]>(`${this.apiUrl}/users/${userId}`);
   }
+
 }
