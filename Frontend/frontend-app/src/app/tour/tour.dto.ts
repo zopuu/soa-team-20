@@ -5,5 +5,6 @@ export interface TourDto {
   title: string;
   description: string;
   difficulty: number;
+  transportType: number;
   tags: string[];
 }

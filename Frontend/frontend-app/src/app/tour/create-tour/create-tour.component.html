@@ -33,6 +33,16 @@
       </mat-select>
     </mat-form-field>
 
+    <!-- Transport Type -->
+    <mat-form-field appearance="fill">
+      <mat-label>Transport Type</mat-label>
+      <mat-select formControlName="transportType">
+        <mat-option *ngFor="let t of transportTypes" [value]="t">{{
+          t
+        }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
     <!-- Tags -->
     <div class="tags" formArrayName="tags">
       <label *ngFor="let tag of availableTags; let i = index">

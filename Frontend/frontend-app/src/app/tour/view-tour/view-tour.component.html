@@ -75,6 +75,18 @@
               <span matSuffix>$</span>
             </mat-form-field>
 
+            <mat-form-field
+              appearance="outline"
+              style="width: 100%; margin-bottom: 16px"
+            >
+              <mat-label>Transport Type</mat-label>
+              <mat-select [(ngModel)]="editForm.transportType" required (selectionChange)="onTransportTypeChange()">
+                <mat-option value="Walking">Walking</mat-option>
+                <mat-option value="Bicycle">Bicycle</mat-option>
+                <mat-option value="Bus">Bus</mat-option>
+              </mat-select>
+            </mat-form-field>
+
             <div style="display: flex; gap: 8px; margin-bottom: 16px">
               <button mat-raised-button color="primary" (click)="saveChanges()">
                 Save Changes
@@ -121,6 +133,7 @@
               {{ tour.distance | number : "1.2-2" }} km
             </p>
             <p><strong>Duration:</strong> {{ tour.duration }} min</p>
+            <p><strong>Transport Type:</strong> {{ transportTypeLabel(tour.transportType) }}</p>
           </ng-template>
         </ng-container>
         <ng-template #minimalDetails>

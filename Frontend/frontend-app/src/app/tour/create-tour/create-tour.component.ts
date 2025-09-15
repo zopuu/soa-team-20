@@ -13,6 +13,7 @@ import { TourDifficulty } from '../tour.model';
 export class CreateTourComponent {
   tourForm: FormGroup;
   difficulties = Object.values(TourDifficulty);
+  transportTypes = ['Walking', 'Bicycle', 'Bus'];
   availableTags = [
     'Nature',
     'History',
@@ -31,6 +32,7 @@ export class CreateTourComponent {
       title: ['', Validators.required],
       description: ['', [Validators.required, Validators.minLength(10)]],
       difficulty: [this.difficulties[0], Validators.required],
+      transportType: [this.transportTypes[0], Validators.required],
       tags: this.fb.array(this.availableTags.map(() => false)),
       image: [''],
     });
@@ -58,11 +60,19 @@ export class CreateTourComponent {
           else if (diffStr === 'Advanced') difficultyNum = 2;
           else if (diffStr === 'Pro') difficultyNum = 3; // Pro or unknown -> highest
 
+          // map frontend transport type strings to backend numeric enum
+          const transportStr: string = this.tourForm.value.transportType;
+          let transportTypeNum = 0; // default Walking
+          if (transportStr === 'Walking') transportTypeNum = 0;
+          else if (transportStr === 'Bicycle') transportTypeNum = 1;
+          else if (transportStr === 'Bus') transportTypeNum = 2;
+
           const dto: TourDto = {
             authorId: me.id as unknown as string,
             title: this.tourForm.value.title,
             description: this.tourForm.value.description,
             difficulty: difficultyNum,
+            transportType: transportTypeNum,
             tags: selectedTags,
           };
 
@@ -72,6 +82,7 @@ export class CreateTourComponent {
               // reset form and clear tag checkboxes
               this.tourForm.reset({
                 difficulty: this.difficulties[0],
+                transportType: this.transportTypes[0],
                 image: '',
               });
               this.tagsArray.controls.forEach((c) => c.setValue(false));
