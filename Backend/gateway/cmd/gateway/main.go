@@ -18,6 +18,7 @@ import (
 	"github.com/zopuu/soa-team-20/Backend/gateway/internal/mw"
 	"github.com/zopuu/soa-team-20/Backend/gateway/internal/proxy"
 	followerspb "github.com/zopuu/soa-team-20/Backend/services/followers_service/proto/followerspb"
+	tourpb "github.com/zopuu/soa-team-20/Backend/services/tour/proto"
 )
 
 func main() {
@@ -104,6 +105,15 @@ func main() {
 
 	followersClient := followerspb.NewFollowersServiceClient(grpcConn)
 
+	// Connect to Tour gRPC service
+	tourGrpcConn, err := grpc.Dial(cfg.TourGRPCAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("failed to connect to tour service: %v", err)
+	}
+	defer tourGrpcConn.Close()
+
+	tourClient := tourpb.NewTourServiceClient(tourGrpcConn)
+
 	// REST -> gRPC mappings
 	r.Route("/api/followers", func(rr chi.Router) {
 		rr.Use(secure) // require JWT auth
@@ -180,6 +190,57 @@ func main() {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
+			json.NewEncoder(w).Encode(resp)
+		})
+	})
+
+	// REST -> gRPC mappings for Tour service
+	r.Route("/api/tours", func(rr chi.Router) {
+		rr.Use(secure) // require JWT auth
+
+			
+
+			rr.Post("/", func(w http.ResponseWriter, r *http.Request) {
+			var req struct {
+				AuthorId      string   `json:"authorId"`
+				Title         string   `json:"title"`
+				Description   string   `json:"description"`
+				Difficulty    int32    `json:"difficulty"`
+				Tags          []string `json:"tags"`
+				TransportType int32    `json:"transportType"`
+			}
+
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			resp, err := tourClient.CreateTour(r.Context(), &tourpb.CreateTourRequest{
+				AuthorId:      req.AuthorId, 
+				Title:         req.Title, 
+				Description:   req.Description, 
+				Difficulty:    tourpb.TourDifficulty(req.Difficulty), 
+				Tags:          req.Tags,
+				TransportType: tourpb.TransportType(req.TransportType),
+			})
+
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			
+			json.NewEncoder(w).Encode(resp)
+		})
+
+		rr.Delete("/{id}", func(w http.ResponseWriter, r *http.Request) {
+			id := chi.URLParam(r, "id")
+
+			resp, err := tourClient.DeleteTour(r.Context(), &tourpb.DeleteTourRequest{Id: id})
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			
 			json.NewEncoder(w).Encode(resp)
 		})
 	})

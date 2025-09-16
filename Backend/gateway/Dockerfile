@@ -7,6 +7,7 @@ COPY services/followers_service/go.mod services/followers_service/go.sum ./servi
 
 # Download dependencies for both modules
 WORKDIR /app/gateway
+RUN go mod tidy
 RUN go mod download
 
 WORKDIR /app/services/followers_service

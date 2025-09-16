@@ -25,6 +25,7 @@ type Config struct {
 	DialTimeout       time.Duration
 	ProxyTimeout      time.Duration
 	FollowersGRPCAddr string
+	TourGRPCAddr      string
 }
 
 func getenv(key, def string) string {
@@ -49,6 +50,7 @@ func New() *Config {
 		DialTimeout:       5 * time.Second,
 		ProxyTimeout:      30 * time.Second,
 		FollowersGRPCAddr: getenv("FOLLOWERS_GRPC_ADDR", "followers-service:50051"),
+		TourGRPCAddr:      getenv("TOUR_GRPC_ADDR", "tourservice:50052"),
 	}
 
 	if c.JwtSecret == "CHANGE_ME" {
