@@ -21,22 +21,22 @@ export class AdminPageComponent implements OnInit {
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
-    this.http.get<User[]>('http://localhost:5000/api/admin')
+    this.http.get<User[]>('http://localhost:7000/api/admin')
       .subscribe(data => this.users = data);
   }
 
   blockUser(id: number) {
-    this.http.put(`http://localhost:5000/api/admin/${id}/block`, {})
+    this.http.put(`http://localhost:7000/api/admin/${id}/block`, {})
       .subscribe(() => this.refreshUsers());
   }
 
   unblockUser(id: number) {
-    this.http.put(`http://localhost:5000/api/admin/${id}/unblock`, {})
+    this.http.put(`http://localhost:7000/api/admin/${id}/unblock`, {})
       .subscribe(() => this.refreshUsers());
   }
 
   private refreshUsers() {
-    this.http.get<User[]>('http://localhost:5000/api/admin')
+    this.http.get<User[]>('http://localhost:7000/api/admin')
       .subscribe(data => this.users = data);
   }
 }

@@ -8,8 +8,26 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Text.Json.Serialization;
+using Serilog;
+using Serilog.Events;
+using Serilog.Formatting.Compact;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Logging.ClearProviders();
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .MinimumLevel.Is(Enum.Parse<LogEventLevel>(
+        Environment.GetEnvironmentVariable("LOG_LEVEL") ?? "Information", true))
+    .Enrich.WithProperty("service", "auth")
+    .Enrich.FromLogContext()
+    .Enrich.WithEnvironmentName()
+    .Enrich.WithMachineName()
+    .WriteTo.Console(new CompactJsonFormatter())
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 
 // CORS
@@ -109,6 +127,28 @@ using (var scope = app.Services.CreateScope()) {
     }
 }
 
+app.UseSerilogRequestLogging(opts => {
+    opts.EnrichDiagnosticContext = (diag, http) => {
+        diag.Set("request_id", http.Items["RequestId"]);
+        diag.Set("trace_id", http.TraceIdentifier); // za sad fallback
+        diag.Set("user_id", http.User?.Identity?.Name);
+        diag.Set("method", http.Request.Method);
+        diag.Set("path", http.Request.Path);
+        diag.Set("client_ip", http.Connection.RemoteIpAddress?.ToString());
+        diag.Set("scheme", http.Request.Scheme);
+        diag.Set("host", http.Request.Host.ToString());
+    };
+});
+
+
+//request_id middleware
+app.Use(async (ctx, next) => {
+    var reqId = ctx.Request.Headers["X-Request-ID"].FirstOrDefault()
+            ?? Guid.NewGuid().ToString("N");
+    ctx.Items["RequestId"] = reqId;
+    ctx.Response.Headers["X-Request-ID"] = reqId;
+    await next();
+});
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -125,5 +165,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapGet("/health", () => Results.Ok("Ok"));
 
 app.Run();
