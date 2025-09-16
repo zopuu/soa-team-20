@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"time"
@@ -10,7 +11,11 @@ import (
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+	tourgrpc "tour.xws.com/grpc"
 	"tour.xws.com/handler"
+	tourpb "tour.xws.com/proto"
 	"tour.xws.com/repository"
 	"tour.xws.com/service"
 )
@@ -19,7 +24,7 @@ type MongoCollections struct {
 	Tours            *mongo.Collection
 	KeyPoints        *mongo.Collection
 	CurrentLocations *mongo.Collection
-	Ratings 		 *mongo.Collection
+	Ratings          *mongo.Collection
 }
 
 func initMongoDB() MongoCollections {
@@ -46,7 +51,7 @@ func initMongoDB() MongoCollections {
 		Tours:            db.Collection("tours"),
 		KeyPoints:        db.Collection("keyPoints"),
 		CurrentLocations: db.Collection("currentLocations"),
-		Ratings: 		  db.Collection("tour_ratings"),
+		Ratings:          db.Collection("tour_ratings"),
 	}
 
 	return collections
@@ -71,6 +76,22 @@ func cors(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+func startGRPCServer(tourService *service.TourService) {
+	lis, err := net.Listen("tcp", ":50052")
+	if err != nil {
+		log.Fatalf("Failed listen %s: %v", ":50052", err)
+	}
+
+	grpcServer := grpc.NewServer()
+	tourGRPCServer := tourgrpc.NewTourGRPCServer(tourService)
+	tourpb.RegisterTourServiceServer(grpcServer, tourGRPCServer)
+	reflection.Register(grpcServer)
+
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Fatalf("gRPC serve error: %v", err)
+	}
 }
 
 func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyPointHandler, locationHandler *handler.CurrentLocationHandler, ratingHandler *handler.TourRatingHandler) {
@@ -105,7 +126,7 @@ func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyP
 
 	handlerWithCors := cors(router)
 
-	println("Server starting")
+	println("REST Server starting on port 8080...")
 	log.Fatal(http.ListenAndServe(":8080", handlerWithCors))
 }
 
@@ -126,7 +147,14 @@ func main() {
 	locationHandler := &handler.CurrentLocationHandler{Svc: locationService}
 	//RATINGS
 	ratingRepo := &repository.TourRatingRepository{Collection: collections.Ratings}
-  	ratingService := &service.TourRatingService{Repo: ratingRepo}
-  	ratingHandler := &handler.TourRatingHandler{RatingService: ratingService}
+	ratingService := &service.TourRatingService{Repo: ratingRepo}
+	ratingHandler := &handler.TourRatingHandler{RatingService: ratingService}
+
+	go func() {
+        log.Println("Starting gRPC server on port 50052...")
+        startGRPCServer(tourService)
+    }()
 	startServer(tourHandler, keyPointHandler, locationHandler, ratingHandler)
+	
+	
 }

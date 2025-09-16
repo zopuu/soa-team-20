@@ -8,5 +8,5 @@ RUN go build -o tourservice .
 FROM debian:bookworm-slim
 WORKDIR /app
 COPY --from=builder /app/tourservice .
-EXPOSE 8080
+EXPOSE 8080 50052
 CMD ["./tourservice"]

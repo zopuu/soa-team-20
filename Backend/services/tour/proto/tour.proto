@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package tour;
+
+option go_package = "tour.xws.com/proto/tourpb";
+
+import "google/protobuf/timestamp.proto";
+
+// Tour service definition
+service TourService {
+    rpc CreateTour(CreateTourRequest) returns (CreateTourResponse);
+    rpc DeleteTour(DeleteTourRequest) returns (DeleteTourResponse);
+}
+
+// Tour message based on the Go model
+message Tour {
+    string id = 1;
+    string author_id = 2;
+    string title = 3;
+    string description = 4;
+    TourDifficulty difficulty = 5;
+    repeated string tags = 6;
+    TourStatus status = 7;
+    double price = 8;
+    double distance = 9;
+    google.protobuf.Timestamp published_at = 10;
+    google.protobuf.Timestamp archived_at = 11;
+    double duration = 12;
+    TransportType transport_type = 13;
+}
+
+// Enums based on the Go model
+enum TourStatus {
+    TOUR_STATUS_UNSPECIFIED = 0;
+    TOUR_STATUS_DRAFT = 1;
+    TOUR_STATUS_PUBLISHED = 2;
+    TOUR_STATUS_ARCHIVED = 3;
+}
+
+enum TourDifficulty {
+    TOUR_DIFFICULTY_UNSPECIFIED = 0;
+    TOUR_DIFFICULTY_BEGINNER = 1;
+    TOUR_DIFFICULTY_INTERMEDIATE = 2;
+    TOUR_DIFFICULTY_ADVANCED = 3;
+    TOUR_DIFFICULTY_PRO = 4;
+}
+
+enum TransportType {
+    TRANSPORT_TYPE_UNSPECIFIED = 0;
+    TRANSPORT_TYPE_WALKING = 1;
+    TRANSPORT_TYPE_BICYCLE = 2;
+    TRANSPORT_TYPE_BUS = 3;
+}
+
+// Request and Response messages
+message CreateTourRequest {
+    string author_id = 1;
+    string title = 2;
+    string description = 3;
+    TourDifficulty difficulty = 4;
+    repeated string tags = 5;
+    TransportType transport_type = 6;
+}
+
+message CreateTourResponse {
+    Tour tour = 1;
+    string message = 2;
+}
+
+message DeleteTourRequest {
+    string id = 1;
+}
+
+message DeleteTourResponse {
+    string message = 1;
+    bool success = 2;
+}
