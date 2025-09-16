@@ -96,6 +96,8 @@ services:
             - MONGO_URI=mongodb://tourmongodb:27017
         depends_on:
             - tourmongodb
+        networks:
+            - backend
 
     tourmongodb:
         image: mongo:6
@@ -105,6 +107,8 @@ services:
             - "27018:27017"
         volumes:
             - tour-data:/data/db
+        networks:
+            - backend
 
     followers-service:
         build:
