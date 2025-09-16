@@ -86,6 +86,7 @@ func main() {
 		pr.Route("/tours", func(rr chi.Router) { rr.Handle("/*", secure(tourProxy)) })
 		pr.Route("/keyPoints", func(rr chi.Router) { rr.Handle("/*", secure(tourProxy)) })
 		pr.Route("/simulator", func(rr chi.Router) { rr.Handle("/*", secure(tourProxy)) })
+		pr.Route("/api/admin", func(rr chi.Router) { rr.Handle("/*", secure(authProxy)) })
 	})
 
 	// ---------- gRPC placeholder (next sprint) ----------
