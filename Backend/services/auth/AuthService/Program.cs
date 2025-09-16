@@ -129,8 +129,13 @@ using (var scope = app.Services.CreateScope()) {
 
 app.UseSerilogRequestLogging(opts => {
     opts.EnrichDiagnosticContext = (diag, http) => {
-        diag.Set("request_id", http.Items["RequestId"]);
-        diag.Set("trace_id", http.TraceIdentifier); // za sad fallback
+        var trace = http.Request.Headers["X-Trace-Id"].FirstOrDefault()
+                    ?? http.TraceIdentifier;
+        var reqHeader = http.Request.Headers["X-Request-ID"].FirstOrDefault();
+        var reqId = reqHeader ?? (http.Items["RequestId"]?.ToString());
+
+        diag.Set("trace_id", trace);
+        diag.Set("request_id", reqId);
         diag.Set("user_id", http.User?.Identity?.Name);
         diag.Set("method", http.Request.Method);
         diag.Set("path", http.Request.Path);
@@ -139,6 +144,7 @@ app.UseSerilogRequestLogging(opts => {
         diag.Set("host", http.Request.Host.ToString());
     };
 });
+
 
 
 //request_id middleware

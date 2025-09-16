@@ -1,10 +1,15 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
 	"time"
+	"os"
+
+	"go.uber.org/zap"
+    "go.uber.org/zap/zapcore"
 
 	tb "github.com/didip/tollbooth/v7"
 	tbchi "github.com/didip/tollbooth_chi"
@@ -20,15 +25,79 @@ import (
 	followerspb "github.com/zopuu/soa-team-20/Backend/services/followers_service/proto/followerspb"
 )
 
+type ctxKey string
+const traceKey ctxKey = "trace_id"
+
+func getTraceID(r *http.Request) string {
+	if v, ok := r.Context().Value(traceKey).(string); ok && v != "" { return v }
+	return ""
+}
+// korelacione headere dodajemo na outgoing HTTP zahteve
+func withCorrHeaders(h http.Handler) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        r.Header.Set("X-Request-ID", middleware.GetReqID(r.Context()))
+        r.Header.Set("X-Trace-Id", getTraceID(r))
+        h.ServeHTTP(w, r)
+    }
+}
+
 func main() {
 	cfg := config.New()
+
+	// ---- logger ----
+	encCfg := zap.NewProductionEncoderConfig()
+	encCfg.TimeKey = "ts"
+	encCfg.EncodeTime = zapcore.ISO8601TimeEncoder
+	encCfg.LevelKey = "level"
+	encCfg.MessageKey = "msg"
+
+	lvl := zapcore.InfoLevel
+	if v := os.Getenv("LOG_LEVEL"); v != "" { _ = lvl.UnmarshalText([]byte(v)) }
+
+	core := zapcore.NewCore(zapcore.NewJSONEncoder(encCfg), zapcore.AddSync(os.Stdout), lvl)
+	logger := zap.New(core).With(zap.String("service", "gateway"))
+	defer logger.Sync()
+
 
 	r := chi.NewRouter()
 	r.Use(middleware.RealIP)
 	r.Use(middleware.RequestID)
-	r.Use(middleware.Logger)
 	r.Use(middleware.Timeout(40 * time.Second))
 	r.Use(mw.CORS(cfg.CorsOrigins).Handler)
+
+	
+
+	// 4a) TRACE middleware (obezbeđuje X-Trace-Id i stavlja u context + response header)
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			reqID := middleware.GetReqID(r.Context())
+			traceID := r.Header.Get("X-Trace-Id")
+			if traceID == "" { traceID = reqID } // jednostavno pravilo
+			w.Header().Set("X-Trace-Id", traceID)
+			ctx := context.WithValue(r.Context(), traceKey, traceID)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	})
+
+	// 4b) JSON access-log (zamenjuje middleware.Logger)
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			start := time.Now()
+			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+			next.ServeHTTP(ww, r)
+			logger.Info("http_request",
+				zap.String("method", r.Method),
+				zap.String("path", r.URL.Path),
+				zap.Int("status", ww.Status()),
+				zap.Int("bytes", ww.BytesWritten()),
+				zap.String("client_ip", r.RemoteAddr),
+				zap.Int64("latency_ms", time.Since(start).Milliseconds()),
+				zap.String("request_id", middleware.GetReqID(r.Context())),
+				zap.String("trace_id", getTraceID(r)),
+			)
+		})
+	})
+
 
 	// Rate limit (50 req/sec/IP)
 	limiter := tb.NewLimiter(50, nil)
@@ -45,9 +114,9 @@ func main() {
 	authProxy, _ := proxy.NewHTTPReverseProxy(proxy.Options{
 		Target: cfg.AuthBase, StripPrefix: "", DialTimeout: cfg.DialTimeout, ProxyTimeout: cfg.ProxyTimeout,
 	})
-	stakeProxy, _ := proxy.NewHTTPReverseProxy(proxy.Options{
-		Target: cfg.StakeBase, StripPrefix: "", DialTimeout: cfg.DialTimeout, ProxyTimeout: cfg.ProxyTimeout,
-	})
+	//stakeProxy, _ := proxy.NewHTTPReverseProxy(proxy.Options{
+		//Target: cfg.StakeBase, StripPrefix: "", DialTimeout: cfg.DialTimeout, ProxyTimeout: cfg.ProxyTimeout,
+	//})
 	blogProxy, _ := proxy.NewHTTPReverseProxy(proxy.Options{
 		Target: cfg.BlogBase, StripPrefix: "", DialTimeout: cfg.DialTimeout, ProxyTimeout: cfg.ProxyTimeout,
 	})
@@ -55,11 +124,19 @@ func main() {
 		Target: cfg.TourBase, StripPrefix: "", DialTimeout: cfg.DialTimeout, ProxyTimeout: cfg.ProxyTimeout,
 	})
 
-	logProxy := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("Gateway forwarding request: %s %s from %s", r.Method, r.URL.Path, r.RemoteAddr)
-		log.Printf("Forwarding to %s%s", cfg.StakeBase, r.URL.Path)
-		stakeProxy.ServeHTTP(w, r) // forward to users service
-	})
+	/*
+	logProxy := withCorrHeaders(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// informativni log pre forward-a
+		logger.Info("forward_http",
+			zap.String("to", cfg.StakeBase),
+			zap.String("path", r.URL.Path),
+			zap.String("trace_id", getTraceID(r)),
+			zap.String("request_id", middleware.GetReqID(r.Context())),
+		)
+		stakeProxy.ServeHTTP(w, r)
+	}))
+		*/
+
 
 	// Health
 	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
@@ -69,24 +146,28 @@ func main() {
 	// Public auth endpoints (allow anonymous): e.g., /api/auth/login, /api/auth/register, /api/auth/refresh
 	r.Route("/api/auth", func(rr chi.Router) {
 		rr.Use(mw.AuthOptional(jwtCfg)) // parse token if present, but don't require
-		rr.Handle("/*", authProxy)
+		rr.Handle("/*", withCorrHeaders(authProxy))
 	})
 
 	// Everything else requires JWT
 	secure := func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			log.Printf("Request secured with JWT middleware: %s", r.Header.Get("Authorization"))
+			logger.Info("secure_route",
+				zap.Bool("authz_present", r.Header.Get("Authorization") != ""),
+				zap.String("trace_id", getTraceID(r)),
+				zap.String("request_id", middleware.GetReqID(r.Context())),
+			)
 			mw.AuthRequired(jwtCfg)(h).ServeHTTP(w, r)
 		})
 	}
 
+
 	r.Group(func(pr chi.Router) {
-		pr.Route("/api/users", func(rr chi.Router) { rr.Handle("/*", secure(logProxy)) })
-		pr.Route("/blogs", func(rr chi.Router) { rr.Handle("/*", secure(blogProxy)) })
-		pr.Route("/tours", func(rr chi.Router) { rr.Handle("/*", secure(tourProxy)) })
-		pr.Route("/keyPoints", func(rr chi.Router) { rr.Handle("/*", secure(tourProxy)) })
-		pr.Route("/simulator", func(rr chi.Router) { rr.Handle("/*", secure(tourProxy)) })
-		pr.Route("/api/admin", func(rr chi.Router) { rr.Handle("/*", secure(authProxy)) })
+		pr.Route("/blogs",     func(rr chi.Router){ rr.Handle("/*", secure(withCorrHeaders(blogProxy))) })
+		pr.Route("/tours",     func(rr chi.Router){ rr.Handle("/*", secure(withCorrHeaders(tourProxy))) })
+		pr.Route("/keyPoints", func(rr chi.Router){ rr.Handle("/*", secure(withCorrHeaders(tourProxy))) })
+		pr.Route("/simulator", func(rr chi.Router){ rr.Handle("/*", secure(withCorrHeaders(tourProxy))) })
+		pr.Route("/api/admin", func(rr chi.Router){ rr.Handle("/*", secure(withCorrHeaders(authProxy))) })
 	})
 
 	// ---------- gRPC placeholder (next sprint) ----------
