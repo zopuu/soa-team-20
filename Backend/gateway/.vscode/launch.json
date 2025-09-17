@@ -1,0 +1,20 @@
+{
+  "configurations": [
+    {
+      "name": "Run Gateway",
+      "type": "go",
+      "request": "launch",
+      "program": "${workspaceFolder}/cmd/gateway",
+      "env": {
+        "GATEWAY_PORT": "7000",
+        "AUTH_BASE": "http://localhost:5000",
+        "STAKE_BASE": "http://localhost:5001",
+        "BLOG_BASE": "http://localhost:5100",
+        "TOUR_BASE": "http://localhost:5200",
+        "JWT_SECRET": "aiugbherajndfuieajdvnaiuerkjdfnaeui",
+        "JWT_ISSUER": "AuthService",
+        "JWT_AUDIENCE": "AuthServiceClient"
+      }
+    }
+  ]
+}

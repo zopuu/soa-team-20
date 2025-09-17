@@ -12,3 +12,6 @@ obj/
 
 # Go
 **/vendor/
+
+# gateway specific
+__debug_bin.exe*

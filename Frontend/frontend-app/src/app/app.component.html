@@ -1,6 +1,32 @@
-<nav>
-  <a routerLink="/">Home</a> |
-  <a routerLink="/auth/login">Login</a> |
-  <a routerLink="/auth/register">Register</a>
+<nav class="navbar">
+  <div class="navbar-left">
+    <a routerLink="/">Home</a>
+    <button type="button" (click)="goToMyProfile()">View Profile</button>
+    <button type="button" (click)="goToEditProfile()">Edit Profile</button>
+    <button type="button" (click)="goToUsersList()">Find People</button>
+    <button type="button" (click)="CreateBlog()">Create Blog</button>
+    <div class="dropdown">
+      <button class="dropbtn">Tours ▾</button>
+      <div class="dropdown-content">
+        <button type="button" (click)="goToAllTours()">All Tours</button>
+        <button type="button" (click)="goToMyTours()" *ngIf="isGuide">
+          My Tours
+        </button>
+        <button type="button" (click)="CreateTour()" *ngIf="isGuide">
+          Create Tour
+        </button>
+        <button type="button" (click)="goToPositionSim()">Position Simulator</button>
+      </div>
+    </div>
+  </div>
+  <div class="navbar-right">
+    <button type="button" [routerLink]="['/auth/login']" class="nav-btn">
+      Login
+    </button>
+    <button type="button" [routerLink]="['/auth/register']" class="nav-btn">
+      Register
+    </button>
+  </div>
 </nav>
+
 <router-outlet></router-outlet>

@@ -1,0 +1,25 @@
+.image-container {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.keypoint-image {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.image-error {
+  text-align: center;
+  padding: 16px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.image-error p {
+  color: #666;
+  margin: 0;
+  font-style: italic;
+}

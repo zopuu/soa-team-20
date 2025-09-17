@@ -1,0 +1,62 @@
+<div class="create-tour-form">
+  <h2>Create a New Tour</h2>
+
+  <form [formGroup]="tourForm" (ngSubmit)="onSubmit()">
+    <!-- Title -->
+    <mat-form-field appearance="fill">
+      <mat-label>Title</mat-label>
+      <input matInput formControlName="title" />
+      <mat-error *ngIf="tourForm.get('title')?.hasError('required')">
+        Title is required
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Description -->
+    <mat-form-field appearance="fill">
+      <mat-label>Description</mat-label>
+      <textarea matInput rows="4" formControlName="description"></textarea>
+      <mat-error *ngIf="tourForm.get('description')?.hasError('required')">
+        Description is required
+      </mat-error>
+      <mat-error *ngIf="tourForm.get('description')?.hasError('minlength')">
+        Description must be at least 10 characters
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Difficulty -->
+    <mat-form-field appearance="fill">
+      <mat-label>Difficulty</mat-label>
+      <mat-select formControlName="difficulty">
+        <mat-option *ngFor="let d of difficulties" [value]="d">{{
+          d
+        }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <!-- Transport Type -->
+    <mat-form-field appearance="fill">
+      <mat-label>Transport Type</mat-label>
+      <mat-select formControlName="transportType">
+        <mat-option *ngFor="let t of transportTypes" [value]="t">{{
+          t
+        }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <!-- Tags -->
+    <div class="tags" formArrayName="tags">
+      <label *ngFor="let tag of availableTags; let i = index">
+        <input type="checkbox" [formControlName]="i" /> {{ tag }}
+      </label>
+    </div>
+
+    <button
+      mat-raised-button
+      color="primary"
+      type="submit"
+      [disabled]="tourForm.invalid"
+    >
+      Create Tour
+    </button>
+  </form>
+</div>

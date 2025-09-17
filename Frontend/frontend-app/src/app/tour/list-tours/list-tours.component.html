@@ -1,0 +1,181 @@
+<div class="list-wrapper">
+  <h2 *ngIf="userId; else allTitle">Tours by user {{ userId }}</h2>
+  <ng-template #allTitle><h2>All Tours</h2></ng-template>
+
+  <div class="state" *ngIf="loading">Loading…</div>
+  <div class="state error" *ngIf="error">{{ error }}</div>
+
+  <div class="tour-list" *ngIf="!loading && !error">
+    <div class="tour-card" *ngFor="let t of tours; trackBy: trackById">
+      <!-- Minimal view for non-owners: only title, description, difficulty and price -->
+      <ng-container *ngIf="!isMyTours; else fullCard">
+        <h3 class="title">{{ t.title || t.name }}</h3>
+        <p class="desc">{{ t.description }}</p>
+        <div class="meta">
+          <span> • Difficulty: {{ difficultyLabel(t.difficulty) }}</span>
+          <span> • Price: {{ t.price | currency }}</span>
+        </div>
+        <div
+          class="card-actions"
+          style="margin-top: 8px; display: flex; gap: 8px"
+        >
+          <button type="button" (click)="viewTour(t.id)" class="small">
+            View
+          </button>
+          <button type="button" (click)="rateTour(t.id)" class="small">
+            Rate the tour
+          </button>
+        </div>
+      </ng-container>
+
+      <!-- Full card for owners and admins -->
+      <ng-template #fullCard>
+        <h3 class="title">{{ t.title }}</h3>
+        <p class="desc">{{ t.description }}</p>
+
+        <div class="meta">
+          <span> • Difficulty: {{ difficultyLabel(t.difficulty) }}</span>
+          <span> • Status: {{ statusLabel(t.status) }}</span>
+          <span> • Price: {{ t.price | currency }}</span>
+          <span> • by {{ t.authorId }}</span>
+          <span
+            *ngIf="
+              t.status === 1 &&
+              t.publishedAt &&
+              !t.publishedAt.startsWith('0001-01-01')
+            "
+          >
+            • Published: {{ t.publishedAt | date : "short" }}</span
+          >
+          <span
+            *ngIf="
+              t.status === 2 &&
+              t.archivedAt &&
+              !t.archivedAt.startsWith('0001-01-01')
+            "
+          >
+            • Archived: {{ t.archivedAt | date : "short" }}</span
+          >
+          <span> • Distance: {{ t.distance | number : "1.2-2" }} km</span>
+          <span> • Duration: {{ t.duration }} min</span>
+        </div>
+
+        <div class="tags" *ngIf="t.tags?.length">
+          <span *ngFor="let tag of t.tags; let i = index"
+            >{{ tag
+            }}<ng-container *ngIf="i < t.tags.length - 1">
+              ·
+            </ng-container></span
+          >
+        </div>
+
+        <div
+          *ngIf="isMyTours"
+          class="card-actions"
+          style="margin-top: 8px; display: flex; gap: 8px"
+        >
+          <button
+            type="button"
+            (click)="goToCreateKeypoint(t.id)"
+            class="small"
+          >
+            Add Key Point
+          </button>
+          <button
+            type="button"
+            (click)="confirmDelete(t.id)"
+            class="small danger"
+          >
+            Delete
+          </button>
+          <button type="button" (click)="viewTour(t.id)" class="small">
+            View
+          </button>
+          <!-- Publish button - visible only for Draft tours -->
+          <button
+            *ngIf="canPublish(t)"
+            type="button"
+            (click)="publishTour(t)"
+            class="small publish-btn"
+            style="background-color: #4caf50; color: white"
+          >
+            Publish
+          </button>
+          <!-- Archive button - visible only for Published tours -->
+          <button
+            *ngIf="canArchive(t)"
+            type="button"
+            (click)="archiveTour(t)"
+            class="small archive-btn"
+            style="background-color: #ff9800; color: white"
+          >
+            Archive
+          </button>
+        </div>
+      </ng-template>
+      <div
+        class="card-actions"
+        style="margin-top: 8px; display: flex; gap: 8px"
+      ></div>
+    </div>
+
+    <div *ngIf="tours.length === 0" class="state">No tours found.</div>
+  </div>
+</div>
+<!-- ========================= RATE MODAL ========================= -->
+<div class="modal-backdrop" *ngIf="showRateModal" (click)="closeRateModal()"></div>
+
+<div class="modal" *ngIf="showRateModal" role="dialog" aria-modal="true">
+  <h3>Ostavi recenziju</h3>
+
+  <form [formGroup]="reviewForm" (ngSubmit)="submitReview()">
+    <div class="row">
+      <label for="rating">Ocena (1–5)</label>
+      <input id="rating" type="number" formControlName="rating" />
+    </div>
+
+    <div class="row">
+      <label for="comment">Komentar</label>
+      <textarea id="comment" rows="4" formControlName="comment" placeholder="Podeli utiske..."></textarea>
+    </div>
+
+    <div class="row two">
+      <div>
+        <label for="touristName">Ime i prezime turiste</label>
+        <input id="touristName" type="text" formControlName="touristName" />
+      </div>
+      <div>
+        <label for="touristEmail">Email</label>
+        <input id="touristEmail" type="email" formControlName="touristEmail" />
+      </div>
+    </div>
+
+    <div class="row two">
+      <div>
+        <label for="visitedAt">Datum posete</label>
+        <input id="visitedAt" type="date" formControlName="visitedAt" />
+      </div>
+      <div>
+        <label for="commentedAt">Datum komentarisanja</label>
+        <input id="commentedAt" type="date" formControlName="commentedAt" />
+      </div>
+    </div>
+
+    <!-- <div class="row">
+      <label for="images">Slike (više dozvoljeno)</label>
+      <input id="images" type="file" (change)="onFileChange($event)" accept="image/*" multiple />
+      <div class="thumbs" *ngIf="selectedImages?.length">
+        <span *ngFor="let f of selectedImages">{{ f.name }}</span>
+      </div>
+    </div> -->
+
+    <div class="actions">
+      <button type="button" class="small" (click)="closeRateModal()">Otkaži</button>
+      <button type="submit" class="small primary" [disabled]=" submittingReview">
+        {{ submittingReview ? 'Slanje…' : 'Pošalji recenziju' }}
+      </button>
+    </div>
+
+  </form>
+</div>
+<!-- ===================== /RATE MODAL END ======================== -->

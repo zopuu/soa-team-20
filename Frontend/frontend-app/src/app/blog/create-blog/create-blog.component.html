@@ -1,0 +1,53 @@
+<div class="create-blog-form">
+  <h2>Create a New Blog</h2>
+
+  <form [formGroup]="blogForm" (ngSubmit)="onSubmit()">
+    <!-- Title -->
+    <mat-form-field appearance="fill">
+      <mat-label>Title</mat-label>
+      <input matInput formControlName="title" />
+      <mat-error *ngIf="blogForm.get('title')?.hasError('required')">
+        Title is required
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Description -->
+    <mat-form-field appearance="fill">
+      <mat-label>Description</mat-label>
+      <textarea matInput rows="4" formControlName="description"></textarea>
+      <mat-error *ngIf="blogForm.get('description')?.hasError('required')">
+        Description is required
+      </mat-error>
+      <mat-error *ngIf="blogForm.get('description')?.hasError('minlength')">
+        Description must be at least 10 characters
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Images -->
+    <div class="image-upload">
+      <mat-label>Images</mat-label>
+      <input
+        type="file"
+        accept="image/*"
+        multiple
+        (change)="onImagesSelected($event)"
+        class="file-input"
+      />
+      <div *ngIf="selectedImages.length > 0" class="selected-files">
+        Selected {{ selectedImages.length }} image(s):
+        <ul>
+          <li *ngFor="let img of selectedImages">{{ img.name }}</li>
+        </ul>
+      </div>
+    </div>
+
+    <button
+      mat-raised-button
+      color="primary"
+      type="submit"
+      [disabled]="blogForm.invalid"
+    >
+      Create Blog
+    </button>
+  </form>
+</div>

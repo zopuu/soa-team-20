@@ -1,0 +1,11 @@
+bin/
+*.exe
+*.out
+*.test
+
+# Protobuf
+
+
+# IDE
+.idea/
+.vscode/

@@ -1,0 +1,13 @@
+<h2 class="title">Position Simulator</h2>
+
+<div class="hint" *ngIf="!hasKnownPosition">
+  No selected location — please select where you are now.
+</div>
+
+<div #map class="map"></div>
+
+<div class="info">
+  <ng-template #noSel>
+    <span *ngIf="hasKnownPosition === false">Click on the map to set your location.</span>
+  </ng-template>
+</div>

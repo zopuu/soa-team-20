@@ -23,12 +23,8 @@ import { MatTabsModule } from '@angular/material/tabs';
 
 import { HttpClientModule } from '@angular/common/http';
 
-
 @NgModule({
-  declarations: [
-    LoginComponent,
-    RegisterComponent
-  ],
+  declarations: [LoginComponent, RegisterComponent],
   imports: [
     CommonModule,
     AuthRoutingModule,
@@ -47,7 +43,7 @@ import { HttpClientModule } from '@angular/common/http';
     MatDialogModule,
     MatProgressSpinnerModule,
     MatDividerModule,
-    MatTabsModule
-  ]
+    MatTabsModule,
+  ],
 })
-export class AuthModule { }
+export class AuthModule {}

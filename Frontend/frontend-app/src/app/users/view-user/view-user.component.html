@@ -1,0 +1,31 @@
+<div *ngIf="loading">Loading…</div>
+<div *ngIf="!loading && error" class="error">{{ error }}</div>
+
+<div *ngIf="!loading && user" class="card">
+  <h2>User #{{ user.Id }}</h2>
+
+  <div><strong>Username:</strong> {{ user.Username }}</div>
+  <div><strong>Email:</strong> {{ user.Email }}</div>
+  <div *ngIf="user.Role"><strong>Role:</strong> {{ user.Role }}</div>
+  <div><strong>Created:</strong> {{ user.CreatedAt | date : "medium" }}</div>
+  <div *ngIf="user.Description">
+    <strong>Description:</strong> {{ user.Description }}
+  </div>
+  <div *ngIf="user.FirstName">
+    <strong>First Name:</strong> {{ user.FirstName }}
+  </div>
+  <div *ngIf="user.LastName">
+    <strong>Last Name:</strong> {{ user.LastName }}
+  </div>
+  <div *ngIf="user.Moto"><strong>Moto:</strong> {{ user.Moto }}</div>
+  <div *ngIf="user.ProfilePhoto">
+    <strong>Profile Photo:</strong><br />
+    <img
+      [src]="user.ProfilePhoto"
+      alt="Profile Photo"
+      style="max-width: 150px; border-radius: 8px"
+    />
+  </div>
+</div>
+
+<app-blog-list [userId]="'1'"></app-blog-list>

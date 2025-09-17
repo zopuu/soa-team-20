@@ -1,0 +1,53 @@
+<!-- src/app/users/edit-user/edit-user.component.html -->
+<div *ngIf="loading">Loading…</div>
+<div *ngIf="!loading && error" class="error">{{ error }}</div>
+
+<form *ngIf="!loading" [formGroup]="form" (ngSubmit)="save()" class="card" novalidate>
+  <h2>Edit User #{{ id }}</h2>
+
+  <label>
+    <div><strong>First name</strong></div>
+    <input type="text" formControlName="FirstName" />
+    <small *ngIf="form.controls['FirstName'].invalid && form.controls['FirstName'].touched">
+      First name is required.
+    </small>
+  </label>
+
+  <label>
+    <div><strong>Last name</strong></div>
+    <input type="text" formControlName="LastName" />
+    <small *ngIf="form.controls['LastName'].invalid && form.controls['LastName'].touched">
+      Last name is required.
+    </small>
+  </label>
+
+  <!-- Profile photo URL input -->
+  <label>
+    <div><strong>Profile photo (URL)</strong></div>
+    <input type="url" formControlName="ProfilePhoto" placeholder="https://example.com/photo.jpg" />
+    <small *ngIf="form.controls['ProfilePhoto'].invalid && form.controls['ProfilePhoto'].touched">
+      Please enter a valid URL.
+    </small>
+  </label>
+
+  <!-- Live preview -->
+  <div *ngIf="form.value.ProfilePhoto" class="photo-preview">
+    <strong>Preview:</strong><br />
+    <img [src]="form.value.ProfilePhoto" alt="Profile preview" />
+  </div>
+
+  <label>
+    <div><strong>Description</strong></div>
+    <textarea rows="3" formControlName="Description"></textarea>
+  </label>
+
+  <label>
+    <div><strong>Moto</strong></div>
+    <input type="text" formControlName="Moto" />
+  </label>
+
+  <div style="margin-top: 12px;">
+    <button type="submit" [disabled]="saving || form.invalid">Save</button>
+    <button type="button" (click)="cancel()">Cancel</button>
+  </div>
+</form>

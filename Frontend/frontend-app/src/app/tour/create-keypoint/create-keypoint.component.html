@@ -1,0 +1,65 @@
+<div class="kp-page">
+  <div class="map-left">
+    <div #mapContainer class="kp-map" aria-label="map container"></div>
+  </div>
+
+  <div class="form-right">
+    <!-- Right column reserved for create form (30% width) -->
+    <form [formGroup]="form" (ngSubmit)="submit()" class="kp-form">
+      <h3>Create Keypoint</h3>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Tour ID</mat-label>
+        <input matInput formControlName="tourId" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Title</mat-label>
+        <input matInput formControlName="title" required />
+        <mat-error *ngIf="form.get('title')?.hasError('required')"
+          >Title is required</mat-error
+        >
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Description</mat-label>
+        <textarea matInput formControlName="description" rows="4"></textarea>
+      </mat-form-field>
+
+      <div class="image-upload">
+        <mat-label>Image</mat-label>
+        <input
+          type="file"
+          accept="image/*"
+          (change)="onImageSelected($event)"
+          class="file-input"
+        />
+        <div *ngIf="selectedImage" class="selected-file">
+          Selected: {{ selectedImage.name }}
+        </div>
+      </div>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Latitude</mat-label>
+        <input matInput formControlName="latitude" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Longitude</mat-label>
+        <input matInput formControlName="longitude" readonly />
+      </mat-form-field>
+
+      <div class="actions">
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="form.invalid"
+        >
+          Create Keypoint
+        </button>
+        <button mat-button type="button" (click)="cancel()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>

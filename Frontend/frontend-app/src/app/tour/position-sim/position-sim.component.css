@@ -1,0 +1,8 @@
+.title{ margin:12px 0 }
+.map{ height:70vh; width:100%; border-radius:12px; overflow:hidden }
+.hint{
+  margin-bottom:8px; padding:8px 12px; border-radius:8px;
+  background:#fff3cd; color:#664d03; border:1px solid #ffecb5;
+}
+.info{ margin-top:10px; color:#444 }
+.status{ color:#666; font-style:italic }
