@@ -21,10 +21,20 @@
     </small>
   </label>
 
+  <!-- Profile photo URL input -->
   <label>
     <div><strong>Profile photo (URL)</strong></div>
-    <input type="url" formControlName="ProfilePhoto" />
+    <input type="url" formControlName="ProfilePhoto" placeholder="https://example.com/photo.jpg" />
+    <small *ngIf="form.controls['ProfilePhoto'].invalid && form.controls['ProfilePhoto'].touched">
+      Please enter a valid URL.
+    </small>
   </label>
+
+  <!-- Live preview -->
+  <div *ngIf="form.value.ProfilePhoto" class="photo-preview">
+    <strong>Preview:</strong><br />
+    <img [src]="form.value.ProfilePhoto" alt="Profile preview" />
+  </div>
 
   <label>
     <div><strong>Description</strong></div>
