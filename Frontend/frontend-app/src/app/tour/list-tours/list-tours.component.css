@@ -56,3 +56,114 @@
   margin: 0 0 8px 0;
   color: #444;
 }
+
+/* ===== Modal overlay ===== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.55);
+  backdrop-filter: saturate(110%) blur(2px);
+  z-index: 998;
+}
+
+/* ===== Modal panel ===== */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  animation: fadeIn 160ms ease-out;
+}
+.modal > form,
+.modal { width: 100%; }
+
+.modal > h3 {
+  margin: 0 0 12px 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+}
+.modal > form {
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow:
+    0 10px 20px rgba(0, 0, 0, 0.10),
+    0 6px 6px rgba(0, 0, 0, 0.06);
+  max-width: 680px;
+  padding: 18px 18px 14px;
+  border: 1px solid #eef2f7;
+  animation: slideUp 180ms ease-out;
+}
+
+/* ===== Form layout ===== */
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.row.two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+label { font-size: 0.875rem; color: #374151; }
+
+input[type="number"],
+input[type="text"],
+input[type="email"],
+input[type="date"],
+textarea {
+  width: 100%;
+  font: inherit;
+  line-height: 1.35;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  color: #111827;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+textarea { resize: vertical; min-height: 96px; }
+
+input:focus,
+textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* Disabled / loading state */
+button[disabled],
+button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Angular validation hint */
+.ng-invalid.ng-touched {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+  margin-top: 10px;
+  border-top: 1px solid #f0f2f6;
+}
+
+/* Animations */
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+@keyframes slideUp { from { transform: translateY(8px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+
+/* Responsive */
+@media (max-width: 640px) {
+  .row.two { grid-template-columns: 1fr; }
+  .modal > form { padding: 16px; }
+}
