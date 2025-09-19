@@ -165,12 +165,57 @@ services:
             - followers-service
         networks:
             - backend
+    loki:
+        image: grafana/loki:2.9.3
+        container_name: loki
+        command: -config.file=/etc/loki/config.yml
+        ports:
+        - "3100:3100"
+        volumes:
+        - ./observability/loki-config.yml:/etc/loki/config.yml:ro
+        - loki_data:/loki
+        networks:
+        - backend
+
+
+    promtail:
+        image: grafana/promtail:2.9.3
+        container_name: promtail
+        command: -config.file=/etc/promtail/config.yml
+        depends_on:
+        - loki
+        volumes:
+        - ./observability/promtail-config.yml:/etc/promtail/config.yml:ro
+        - promtail_positions:/positions
+        - /var/lib/docker/containers:/var/lib/docker/containers:ro
+        - /var/run/docker.sock:/var/run/docker.sock:ro
+        networks:
+        - backend
+
+    grafana:
+        image: grafana/grafana:10.4.2
+        container_name: grafana
+        ports:
+        - "3000:3000"
+        environment:
+        - GF_SECURITY_ADMIN_USER=admin
+        - GF_SECURITY_ADMIN_PASSWORD=admin
+        volumes:
+        - grafana_data:/var/lib/grafana
+        - ./observability/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml:ro
+        depends_on:
+        - loki
+        networks:
+        - backend
 
 volumes:
     auth_data:
     blog-data:
     tour-data:
     followers_neo4j_data:
+    loki_data:
+    promtail_positions:
+    grafana_data:
 
 networks:
     backend:

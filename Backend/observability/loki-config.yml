@@ -1,0 +1,59 @@
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+
+# Globalni ring: MEMBERLIST (ne Consul)
+common:
+  ring:
+    kvstore:
+      store: memberlist        # 👈 ključna linija
+  replication_factor: 1
+
+# Memberlist za single-node (join_members može ostati prazan)
+memberlist:
+  join_members: []
+
+# Minimalni filesystem storage (lokalno)
+schema_config:
+  configs:
+    - from: 2023-01-01
+      store: boltdb-shipper
+      object_store: filesystem
+      schema: v12
+      index:
+        prefix: index_
+        period: 24h
+
+storage_config:
+  boltdb_shipper:
+    active_index_directory: /loki/index
+    cache_location: /loki/boltdb-cache
+    shared_store: filesystem
+  filesystem:
+    directory: /loki/chunks
+
+# WAL ide u /loki/wal (na named volume)
+ingester:
+  wal:
+    enabled: true
+    dir: /loki/wal
+  chunk_idle_period: 5m
+  max_chunk_age: 1h
+
+compactor:
+  working_directory: /loki/boltdb-cache
+  shared_store: filesystem
+
+limits_config:
+  allow_structured_metadata: true
+  ingestion_rate_mb: 8
+  ingestion_burst_size_mb: 16
+
+chunk_store_config:
+  max_look_back_period: 0s
+
+table_manager:
+  retention_deletes_enabled: true
+  retention_period: 168h
