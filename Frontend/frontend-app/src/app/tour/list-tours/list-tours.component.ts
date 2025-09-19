@@ -5,6 +5,20 @@ import { AuthService } from '../../auth/auth.service';
 import { KeypointService } from '../keypoint.service';
 import { Tour, TourStatus, TransportType } from '../tour.model';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+
+interface TourRating {
+  id?: string;
+  tourId?: string;
+  rating: number;
+  comment?: string;
+  touristName?: string;
+  touristEmail?: string;
+  visitedAt?: string | Date;
+  commentedAt?: string | Date;
+  createdAt?: string | Date;
+  images?: string[];
+}
 
 @Component({
   selector: 'app-list-tours',
@@ -12,6 +26,11 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
   styleUrls: ['./list-tours.component.css'],
 })
 export class ListToursComponent {
+  showRatingsModal = false;
+  ratingsLoading = false;
+  ratingsError = '';
+  ratings: TourRating[] = [];
+  selectedTourForRatings: string | null = null;
 
   // Helper functions to convert string enums to numbers for backend
   private statusToNumber(status: string): number {
@@ -191,7 +210,11 @@ rateTour(tourId: string) {
     touristName: [this.userFullName ?? ''],
     touristEmail: [this.userEmail ?? ''],
     visitedAt: [todayISO],
-    commentedAt: [todayISO]
+    commentedAt: [todayISO],
+
+    imageUrl1: ['', [Validators.pattern('https?://.+')]],
+    imageUrl2: ['', [Validators.pattern('https?://.+')]],
+    imageUrl3: ['', [Validators.pattern('https?://.+')]],
   });
 
   this.selectedImages = [];
@@ -213,14 +236,18 @@ onFileChange(evt: Event) {
 submitReview() {
   if (!this.selectedTourId) return;
   this.submittingReview = true;
-  console.log('test');
+
+  const v = this.reviewForm.value;
+  const images = [v.imageUrl1, v.imageUrl2, v.imageUrl3].filter(Boolean);
+
   const payload = {
     rating: this.reviewForm.value.rating,
     comment: this.reviewForm.value.comment,
     touristName: this.reviewForm.value.touristName,
     touristEmail: this.reviewForm.value.touristEmail,
     visitedAt: this.reviewForm.value.visitedAt,
-    commentedAt: this.reviewForm.value.commentedAt
+    commentedAt: this.reviewForm.value.commentedAt,
+    images,
   };
 
   this.tourService.createReview(this.selectedTourId, payload).subscribe({
@@ -236,7 +263,34 @@ submitReview() {
   });
 }
 
+  openRatings(tourId: string) {
+    this.selectedTourForRatings = tourId;
+    this.showRatingsModal = true;
+    this.loadRatings(tourId);
+  }
 
+  closeRatingsModal() {
+    this.showRatingsModal = false;
+    this.ratings = [];
+    this.ratingsError = '';
+    this.selectedTourForRatings = null;
+  }
+
+  private loadRatings(tourId: string) { // <-- string
+    this.ratingsLoading = true;
+    this.ratingsError = '';
+
+    this.tourService.getRatings(tourId).subscribe({
+      next: (res) => {
+        this.ratings = res || [];
+        this.ratingsLoading = false;
+      },
+      error: () => {
+        this.ratingsError = 'Failed to load ratings.';
+        this.ratingsLoading = false;
+      }
+    });
+  }
 
   confirmDelete(tourId: string) {
     if (!tourId) return;

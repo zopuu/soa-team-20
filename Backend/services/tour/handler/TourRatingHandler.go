@@ -16,13 +16,15 @@ type TourRatingHandler struct {
 }
 
 type createRatingReq struct {
-	Rating       int    `json:"rating"`
-	Comment      string `json:"comment"`
-	TouristName  string `json:"touristName"`
-	TouristEmail string `json:"touristEmail"`
-	VisitedAt    string `json:"visitedAt"`   // yyyy-mm-dd
-	CommentedAt  string `json:"commentedAt"` // yyyy-mm-dd
+  Rating       int      `json:"rating"`
+  Comment      string   `json:"comment"`
+  TouristName  string   `json:"touristName"`
+  TouristEmail string   `json:"touristEmail"`
+  VisitedAt    string   `json:"visitedAt"`   
+  CommentedAt  string   `json:"commentedAt"` 
+  Images       []string `json:"images"`      
 }
+
 
 func parseDate(d string) (time.Time, error) {
 	if d == "" { return time.Time{}, nil }
@@ -44,16 +46,18 @@ func (h *TourRatingHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if err != nil { http.Error(w, "Invalid commentedAt", http.StatusBadRequest); return }
 
 	item := &model.TourRating{
-		Id:           uuid.New(),
-		TourId:       tourId,
-		Rating:       body.Rating,
-		Comment:      body.Comment,
-		TouristName:  body.TouristName,
-		TouristEmail: body.TouristEmail,
-		VisitedAt:    visitedAt,
-		CommentedAt:  commentedAt,
-		CreatedAt:    time.Now().UTC(),
+	Id:           uuid.New(),
+	TourId:       tourId,
+	Rating:       body.Rating,
+	Comment:      body.Comment,
+	TouristName:  body.TouristName,
+	TouristEmail: body.TouristEmail,
+	VisitedAt:    visitedAt,
+	CommentedAt:  commentedAt,
+	CreatedAt:    time.Now().UTC(),
+	Images:       body.Images, 
 	}
+
 
 	if err := h.RatingService.Create(item); err != nil {
 		http.Error(w, "Failed to save review", http.StatusInternalServerError); return
