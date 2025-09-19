@@ -7,6 +7,9 @@ import (
 	"os"
 	"time"
 
+	obs "github.com/zopuu/soa-team-20/common/obs"
+	"go.uber.org/zap"
+
 	"blog.xws.com/handler"
 	"blog.xws.com/repository"
 	"blog.xws.com/service"
@@ -72,7 +75,8 @@ func cors(next http.Handler) http.Handler {
 
 		// Allow browsers to send these in preflight
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Request-ID, X-Trace-Id")
+		w.Header().Set("Access-Control-Expose-Headers", "X-Request-ID, X-Trace-Id")
 		// If you use cookies/Authorization header and need them on the browser:
 		// w.Header().Set("Access-Control-Allow-Credentials", "true")
 
@@ -86,6 +90,8 @@ func cors(next http.Handler) http.Handler {
 }
 
 func startServer(handler *handler.BlogHandler, commentHandler *handler.CommentHandler, likeHandler *handler.LikeHandler) {
+	l := obs.NewLogger("blogservice")
+	
 	router := mux.NewRouter().StrictSlash(true)
 
 	router.HandleFunc("/blogs", handler.GetAll).Methods("GET")
@@ -110,10 +116,13 @@ func startServer(handler *handler.BlogHandler, commentHandler *handler.CommentHa
 		w.WriteHeader(http.StatusNoContent)
 	})
 
+	router.Use(obs.TraceMiddleware)
+	router.Use(obs.AccessLogMiddleware(l))
+
 	handlerWithCors := cors(router)
 
-	println("Server starting")
-	log.Fatal(http.ListenAndServe(":8080", handlerWithCors))
+	l.Info("starting_server", zap.String("addr", ":8080"))
+    log.Fatal(http.ListenAndServe(":8080", handlerWithCors))
 }
 func main() {
 	collections := initMongoDB()

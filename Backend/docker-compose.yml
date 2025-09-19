@@ -60,14 +60,16 @@ services:
 
     blogservice:
         build:
-            context: ./services/blog
-            dockerfile: Dockerfile
+            context: .
+            dockerfile: services/blog/Dockerfile
         container_name: blogservice
         image: blogservice
         ports:
             - "5100:8080"
         environment:
             - MONGO_URI=mongodb://blogmongodb:27017
+            - SERVICE_NAME=blogservice
+            - LOG_LEVEL=info
         depends_on:
             - blogmongodb
         networks:

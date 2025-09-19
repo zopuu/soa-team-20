@@ -114,9 +114,9 @@ func main() {
 	authProxy, _ := proxy.NewHTTPReverseProxy(proxy.Options{
 		Target: cfg.AuthBase, StripPrefix: "", DialTimeout: cfg.DialTimeout, ProxyTimeout: cfg.ProxyTimeout,
 	})
-	//stakeProxy, _ := proxy.NewHTTPReverseProxy(proxy.Options{
-		//Target: cfg.StakeBase, StripPrefix: "", DialTimeout: cfg.DialTimeout, ProxyTimeout: cfg.ProxyTimeout,
-	//})
+	stakeProxy, _ := proxy.NewHTTPReverseProxy(proxy.Options{
+		Target: cfg.StakeBase, StripPrefix: "", DialTimeout: cfg.DialTimeout, ProxyTimeout: cfg.ProxyTimeout,
+	})
 	blogProxy, _ := proxy.NewHTTPReverseProxy(proxy.Options{
 		Target: cfg.BlogBase, StripPrefix: "", DialTimeout: cfg.DialTimeout, ProxyTimeout: cfg.ProxyTimeout,
 	})
@@ -168,6 +168,7 @@ func main() {
 		pr.Route("/keyPoints", func(rr chi.Router){ rr.Handle("/*", secure(withCorrHeaders(tourProxy))) })
 		pr.Route("/simulator", func(rr chi.Router){ rr.Handle("/*", secure(withCorrHeaders(tourProxy))) })
 		pr.Route("/api/admin", func(rr chi.Router){ rr.Handle("/*", secure(withCorrHeaders(authProxy))) })
+		pr.Route("/api/users", func(rr chi.Router){ rr.Handle("/*", secure(withCorrHeaders(stakeProxy))) })
 	})
 
 	// ---------- gRPC placeholder (next sprint) ----------
