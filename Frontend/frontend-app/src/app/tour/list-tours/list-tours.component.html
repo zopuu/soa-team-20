@@ -25,6 +25,10 @@
           <button type="button" (click)="rateTour(t.id)" class="small">
             Rate the tour
           </button>
+          <button type="button" (click)="openRatings(t.id)" class="small">View tour ratings</button>
+          <button type="button" (click)="rateTour(t.id)" class="small" *ngIf="currentUserRole === 'Tourist'">
+            Start tour
+          </button>
         </div>
       </ng-container>
 
@@ -161,13 +165,31 @@
       </div>
     </div>
 
-    <!-- <div class="row">
-      <label for="images">Slike (više dozvoljeno)</label>
-      <input id="images" type="file" (change)="onFileChange($event)" accept="image/*" multiple />
-      <div class="thumbs" *ngIf="selectedImages?.length">
-        <span *ngFor="let f of selectedImages">{{ f.name }}</span>
+    <div class="row">
+      <label>Slike (URL)</label>
+
+      <div class="photo-row">
+        <input type="url" placeholder="https://example.com/img1.jpg" formControlName="imageUrl1" />
+        <div class="photo-preview" *ngIf="reviewForm.value.imageUrl1">
+          <img [src]="reviewForm.value.imageUrl1" alt="Preview 1" />
+        </div>
       </div>
-    </div> -->
+
+      <div class="photo-row">
+        <input type="url" placeholder="https://example.com/img2.jpg" formControlName="imageUrl2" />
+        <div class="photo-preview" *ngIf="reviewForm.value.imageUrl2">
+          <img [src]="reviewForm.value.imageUrl2" alt="Preview 2" />
+        </div>
+      </div>
+
+      <div class="photo-row">
+        <input type="url" placeholder="https://example.com/img3.jpg" formControlName="imageUrl3" />
+        <div class="photo-preview" *ngIf="reviewForm.value.imageUrl3">
+          <img [src]="reviewForm.value.imageUrl3" alt="Preview 3" />
+        </div>
+      </div>
+    </div>
+
 
     <div class="actions">
       <button type="button" class="small" (click)="closeRateModal()">Otkaži</button>
@@ -176,6 +198,54 @@
       </button>
     </div>
 
+
   </form>
 </div>
 <!-- ===================== /RATE MODAL END ======================== -->
+
+<!-- ========================= RATINGS MODAL ========================= -->
+<div class="modal-backdrop" *ngIf="showRatingsModal" (click)="closeRatingsModal()"></div>
+
+<div class="modal" *ngIf="showRatingsModal" role="dialog" aria-modal="true">
+  <h3>Tour ratings</h3>
+
+  <div class="ratings-container">
+    <div *ngIf="ratingsLoading" class="state">Loading ratings…</div>
+    <div *ngIf="!ratingsLoading && ratingsError" class="state error">{{ ratingsError }}</div>
+
+    <div *ngIf="!ratingsLoading && !ratingsError">
+      <div *ngIf="ratings?.length === 0" class="state">No ratings yet.</div>
+
+      <div class="ratings-grid" *ngIf="ratings?.length">
+        <div class="rating-card" *ngFor="let r of ratings">
+          <div class="rating-header">
+            <div class="rating-score">★ {{ r.rating }}</div>
+            <div class="rating-meta">
+              <span *ngIf="r.touristName"><strong>{{ r.touristName }}</strong></span>
+              <span *ngIf="r.touristEmail"> • {{ r.touristEmail }}</span>
+            </div>
+          </div>
+
+          <div class="rating-body">
+            <div *ngIf="r.comment" class="rating-comment">“{{ r.comment }}”</div>
+
+            <div class="rating-dates">
+              <span *ngIf="r.visitedAt">Visited: {{ r.visitedAt | date:'mediumDate' }}</span>
+              <span *ngIf="r.commentedAt"> • Commented: {{ r.commentedAt | date:'mediumDate' }}</span>
+              <span *ngIf="r.createdAt"> • Created: {{ r.createdAt | date:'short' }}</span>
+            </div>
+
+            <div class="rating-images" *ngIf="r.images?.length">
+              <img *ngFor="let url of r.images" [src]="url" alt="rating image" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="small" (click)="closeRatingsModal()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ===================== /RATINGS MODAL END ======================== -->
