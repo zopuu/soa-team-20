@@ -9,6 +9,8 @@
       <button class="dropbtn">Tours ▾</button>
       <div class="dropdown-content">
         <button type="button" (click)="goToAllTours()">All Tours</button>
+        <button type="button" (click)="goToShop()">Shop</button>
+        <button type="button" (click)="goToPurschasedTours()">Purschased Tours</button>
         <button type="button" (click)="goToMyTours()" *ngIf="isGuide">
           My Tours
         </button>

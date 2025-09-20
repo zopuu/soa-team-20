@@ -37,6 +37,7 @@ export class ViewTourComponent implements OnInit, AfterViewInit, OnDestroy {
   currentUserId?: string;
   currentUserRole?: string;
   isOwner = false;
+  boughtTour = false;
   isEditMode = false;
   editForm: any = {};
   availableTags = [
@@ -76,9 +77,13 @@ export class ViewTourComponent implements OnInit, AfterViewInit, OnDestroy {
   private initializeFromRoute() {
     // prefer snapshot for immediate value, also subscribe to changes
     const sid = this.route.snapshot.paramMap.get('id');
+    const ref = this.route.snapshot.paramMap.get('ref');
     if (sid) {
       this.tourId = sid;
       this.loadTourDetails();
+    }
+    if(ref){
+      this.boughtTour = ref === 'mytours' ? true: false;
     }
 
     this.route.paramMap.subscribe((pm) => {
@@ -139,7 +144,7 @@ export class ViewTourComponent implements OnInit, AfterViewInit, OnDestroy {
         const latlngs: L.LatLng[] = [];
         // If viewer is not owner, only expose the first keypoint
         const kpsToShow =
-          !this.isOwner && (kps || []).length > 0
+          !this.isOwner && !this.boughtTour && (kps || []).length > 0
             ? [(kps || [])[0]]
             : kps || [];
         kpsToShow.forEach((kp: any) => {

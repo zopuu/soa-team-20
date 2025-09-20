@@ -9,6 +9,7 @@ require (
 	github.com/go-chi/cors v1.2.1
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/zopuu/soa-team-20/Backend/services/followers_service v0.0.0-00010101000000-000000000000
+	github.com/zopuu/soa-team-20/Backend/services/shopping_service v0.0.0-00010101000000-000000000000
 	github.com/zopuu/soa-team-20/Backend/services/tour v0.0.0-00010101000000-000000000000
 	google.golang.org/grpc v1.75.0
 )
@@ -23,5 +24,6 @@ require (
 )
 
 replace github.com/zopuu/soa-team-20/Backend/services/followers_service => ../services/followers_service
+replace github.com/zopuu/soa-team-20/Backend/services/shopping_service => ../services/shopping_service
 
 replace github.com/zopuu/soa-team-20/Backend/services/tour => ../services/tour

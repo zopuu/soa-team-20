@@ -140,6 +140,35 @@ services:
         networks:
             - backend
 
+    shopping-mongo:
+        image: mongo:6
+        container_name: shopping-mongo
+        ports:
+            - "27019:27017"   # host port optional
+        volumes:
+            - shopping-data:/data/db
+        networks:
+            - backend
+
+    shopping-service:
+        build:
+            context: ./services/shopping_service
+            dockerfile: Dockerfile
+        container_name: shopping-service
+        ports:
+            - "50053:50053"
+        environment:
+            - MONGO_URI=mongodb://shopping-mongo:27017
+            - MONGO_DB=shoppingdb
+            - GRPC_ADDR=:50053
+        depends_on:
+            - shopping-mongo
+        networks:
+            - backend
+
+
+
+
     gateway:
         build:
             context: .
@@ -155,6 +184,7 @@ services:
             - TOUR_BASE=http://tourservice:8080
             - FOLLOWERS_GRPC_ADDR=followers-service:50051
             - TOUR_GRPC_ADDR=tourservice:50052
+            - SHOPPING_GRPC_ADDR=shopping_service:50053
             - JWT_SECRET=aiugbherajndfuieajdvnaiuerkjdfnaeui
             - JWT_ISSUER=AuthService
             - JWT_AUDIENCE=AuthServiceClient
@@ -165,6 +195,7 @@ services:
             - blogservice
             - tourservice
             - followers-service
+            - shopping-service
         networks:
             - backend
 
@@ -173,6 +204,7 @@ volumes:
     blog-data:
     tour-data:
     followers_neo4j_data:
+    shopping-data:
 
 networks:
     backend:

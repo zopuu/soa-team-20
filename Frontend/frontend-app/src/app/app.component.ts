@@ -83,6 +83,12 @@ export class AppComponent {
   goToAllTours() {
     this.router.navigate(['/tours']);
   }
+  goToPurschasedTours() {
+    this.router.navigate(['/my-tours']);
+  }
+  goToShop() {
+    this.router.navigate(['/shop']);
+  }
 
   goToMyTours() {
     this.auth.whoAmI().subscribe({
