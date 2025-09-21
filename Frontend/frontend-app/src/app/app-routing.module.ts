@@ -34,9 +34,10 @@ const routes: Routes = [
   { path: 'users/:id/tours', component: ListToursComponent },
   { path: 'tours/view/:id', component: ViewTourComponent },
   { path: 'position-sim', component: PositionSimComponent},
+  { path: 'position-sim/:tourId', component: PositionSimComponent },
 
   { path: '**', redirectTo: '' }, // Redirect any unknown paths to home,
-  
+
 ];
 
 @NgModule({

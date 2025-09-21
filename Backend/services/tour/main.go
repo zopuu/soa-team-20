@@ -25,6 +25,7 @@ type MongoCollections struct {
 	KeyPoints        *mongo.Collection
 	CurrentLocations *mongo.Collection
 	Ratings          *mongo.Collection
+	TourExecutions   *mongo.Collection
 }
 
 func initMongoDB() MongoCollections {
@@ -52,6 +53,7 @@ func initMongoDB() MongoCollections {
 		KeyPoints:        db.Collection("keyPoints"),
 		CurrentLocations: db.Collection("currentLocations"),
 		Ratings:          db.Collection("tour_ratings"),
+		TourExecutions:   db.Collection("tour_executions"),
 	}
 
 	return collections
@@ -94,7 +96,7 @@ func startGRPCServer(tourService *service.TourService) {
 	}
 }
 
-func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyPointHandler, locationHandler *handler.CurrentLocationHandler, ratingHandler *handler.TourRatingHandler) {
+func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyPointHandler, locationHandler *handler.CurrentLocationHandler, ratingHandler *handler.TourRatingHandler, tourExecHandler *handler.TourExecutionHandler) {
 	router := mux.NewRouter().StrictSlash(true)
 
 	//TOUR ENDPOINTS
@@ -119,6 +121,15 @@ func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyP
 	//CURRENT LOCATION ENDPOINTS
 	router.HandleFunc("/simulator/location/{userId}", locationHandler.Get).Methods("GET")
 	router.HandleFunc("/simulator/location", locationHandler.Set).Methods("PUT")
+
+	// TOUR EXECUTION ENDPOINTS (add these)
+	// in startServer(...)
+	// new — nested under /tours
+	router.HandleFunc("/tours/tour-executions/start",   tourExecHandler.Start).Methods("POST")
+	router.HandleFunc("/tours/tour-executions/check",   tourExecHandler.CheckProximity).Methods("POST")
+	router.HandleFunc("/tours/tour-executions/abandon", tourExecHandler.Abandon).Methods("POST")
+	router.HandleFunc("/tours/tour-executions/active",  tourExecHandler.GetActive).Methods("GET")
+
 
 	router.Methods(http.MethodOptions).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
@@ -149,12 +160,21 @@ func main() {
 	ratingRepo := &repository.TourRatingRepository{Collection: collections.Ratings}
 	ratingService := &service.TourRatingService{Repo: ratingRepo}
 	ratingHandler := &handler.TourRatingHandler{RatingService: ratingService}
-
+	// TOUR EXECUTION
+	tourExecRepo := &repository.TourExecutionRepository{Collection: collections.TourExecutions}
+	tourExecService := &service.TourExecutionService{
+		TourRepo:       tourRepository,     // already created above
+		KeyPointRepo:   keyPointRepository, // already created above
+		CurrentLocRepo: locationRepo,       // already created above
+		TourExecRepo:   tourExecRepo,       // new
+	}
+	tourExecHandler := &handler.TourExecutionHandler{Svc: tourExecService}
 	go func() {
         log.Println("Starting gRPC server on port 50052...")
         startGRPCServer(tourService)
     }()
-	startServer(tourHandler, keyPointHandler, locationHandler, ratingHandler)
+
+	startServer(tourHandler, keyPointHandler, locationHandler, ratingHandler, tourExecHandler)
 	
 	
 }

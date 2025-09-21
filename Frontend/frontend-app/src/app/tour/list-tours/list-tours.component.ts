@@ -321,6 +321,8 @@ submitReview() {
     }
   }
 
+
+
   publishTour(tour: any) {
     this.isPublishEnabled(tour.id).then((canPublish) => {
       if (!canPublish) {
@@ -357,4 +359,20 @@ submitReview() {
       },
     });
   }
+
+  startTour(tourId: string) {
+    if (!this.currentUserId) {
+      alert('User not loaded—please log in again.');
+      return;
+    }
+    this.tourService.startExecution({ userId: this.currentUserId, tourId }).subscribe({
+      next: (te) => {
+        this.router.navigate(['/position-sim', tourId], {
+          state: { fromStartTour: true, te }
+        });
+      },
+      error: (e) => console.error('Failed to start execution', e),
+    });
+  }
+
 }
