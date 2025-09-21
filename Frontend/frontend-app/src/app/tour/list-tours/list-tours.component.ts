@@ -31,8 +31,8 @@ export class ListToursComponent {
   ratingsError = '';
   ratings: TourRating[] = [];
   selectedTourForRatings: string | null = null;
+  activeForTour: Record<string, boolean> = {};
 
-  // Helper functions to convert string enums to numbers for backend
   private statusToNumber(status: string): number {
     switch (status) {
       case 'Draft':
@@ -144,10 +144,21 @@ export class ListToursComponent {
       next: (data) => {
         let items = (data || []) as any[];
         if (!this.isMyTours) {
-          items = items.filter((t) => t.status === 1); // only Published for public lists
+          items = items.filter((t) => t.status === 1); // Published only for public
         }
         this.tours = items;
         this.loading = false;
+
+        // NEW: for logged-in tourist, detect which tours are already active for continuation
+        this.activeForTour = {};
+        if (this.currentUserId) {
+          for (const t of this.tours) {
+            this.tourService.getActiveForTour(this.currentUserId, t.id).subscribe({
+              next: (te) => { this.activeForTour[t.id] = !!te; },
+              error: () => { this.activeForTour[t.id] = false; } // 204 also lands here as no body → treat as false
+            });
+          }
+        }
       },
       error: (err) => {
         console.error('Failed to load tours', err);
@@ -156,6 +167,28 @@ export class ListToursComponent {
       },
     });
   }
+
+  // helpers
+  isActiveFor(tourId: string): boolean {
+    return !!this.activeForTour[tourId];
+  }
+
+  onStartOrContinue(tourId: string) {
+    if (!this.currentUserId) {
+      alert('User not loaded—please log in again.');
+      return;
+    }
+    // Start is idempotent now: it will return the existing Active execution for this tour if present.
+    this.tourService.startExecution({ userId: this.currentUserId, tourId }).subscribe({
+      next: (te) => {
+        this.router.navigate(['/position-sim', tourId], {
+          state: { fromStartTour: true, te }
+        });
+      },
+      error: (e) => console.error('Failed to start/continue execution', e),
+    });
+  }
+
 
   trackById = (_: number, t: any) => t.id;
 

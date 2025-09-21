@@ -104,4 +104,15 @@ export class TourService {
   abandonExecution(userId: number | string) {
     return this.http.post(`${this.apiUrl}/tour-executions/abandon`, { userId: String(userId) });
   }
+
+  abandon(userId: number | string) {
+    return this.http.post(`${this.apiUrl}/tour-executions/abandon`, { userId: String(userId) });
+  }
+
+  getActiveForTour(userId: string | number, tourId: string) {
+    return this.http.post<any>(`${this.apiUrl}/tour-executions/active-for-tour`, {
+      userId: String(userId),
+      tourId
+    });
+  }
 }

@@ -42,5 +42,7 @@ type TourExecution struct {
     TotalKeyPoints    int        `json:"totalKeyPoints" bson:"totalKeyPoints"`
     NextKeyPointIndex int        `json:"nextKeyPointIndex" bson:"nextKeyPointIndex"`
     LastKnownCoords   Coordinates `json:"lastKnownCoords" bson:"lastKnownCoords"`
+
+	KeyPointsCompletitionTimes []time.Time      `json:"keyPointsCompletitionTimes" bson:"keyPointsCompletitionTimes"`
 }
 

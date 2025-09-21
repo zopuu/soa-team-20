@@ -5,13 +5,23 @@
     <!-- controls row -->
     <div class="controls">
       <button class="btn btn-danger" (click)="onAbandonTour()">Abandon Tour</button>
-      <div class="chip" *ngIf="distanceMeters !== undefined">
-        <strong>Next:</strong>
-        <span>{{ nextTitle || 'checkpoint' }}</span>
-        <span>•</span>
-        <span>{{ distanceMeters | number:'1.0-0' }} m away</span>
+
+      <div class="chip">
+        <ng-container *ngIf="distanceMeters !== undefined; else justCountdown">
+          <strong>Next:</strong>
+          <span>{{ nextTitle || 'checkpoint' }}</span>
+          <span>•</span>
+          <span>{{ distanceMeters | number:'1.0-0' }} m away</span>
+          <span>•</span>
+          <span>Next check in {{ countdownSec }}s</span>
+        </ng-container>
+
+        <ng-template #justCountdown>
+          <span>Next check in {{ countdownSec }}s</span>
+        </ng-template>
       </div>
     </div>
+
 
     <div class="hint" *ngIf="!hasKnownPosition">
       No selected location — please select where you are now.

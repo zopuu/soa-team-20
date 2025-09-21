@@ -50,3 +50,15 @@ func (r *TourExecutionRepository) SetStatus(id uuid.UUID, status model.TourExecu
 	_, err := r.Collection.UpdateOne(context.TODO(), bson.M{"_id": id}, update)
 	return err
 }
+
+func (r *TourExecutionRepository) GetActiveByUserAndTour(userId string, tourId uuid.UUID) (*model.TourExecution, error) {
+	var te model.TourExecution
+	err := r.Collection.FindOne(
+		context.TODO(),
+		bson.M{"userId": userId, "tourId": tourId, "status": model.TourExecActive},
+	).Decode(&te)
+	if err == mongo.ErrNoDocuments {
+		return nil, nil
+	}
+	return &te, err
+}
