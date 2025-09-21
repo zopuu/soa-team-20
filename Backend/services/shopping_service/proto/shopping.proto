@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package shopping;
+
+option go_package = "github.com/zopuu/soa-team-20/Backend/services/shopping_service/proto/shoppingpb;shoppingpb";
+
+import "google/protobuf/timestamp.proto";
+
+message OrderItem {
+  string tour_id = 1;
+  string name = 2;
+  double price = 3;
+}
+
+message Cart {
+  string user_id = 1;
+  repeated OrderItem items = 2;
+  double total = 3;
+}
+
+message AddToCartRequest {
+  string user_id = 1;
+  OrderItem item = 2;
+}
+message AddToCartResponse {
+  Cart cart = 1;
+}
+
+message RemoveFromCartRequest {
+  string user_id = 1;
+  string tour_id = 2; // remove first matching tour item
+}
+message RemoveFromCartResponse {
+  Cart cart = 1;
+}
+
+message GetCartRequest {
+  string user_id = 1;
+}
+message GetCartResponse {
+  Cart cart = 1;
+}
+
+message CheckoutRequest {
+  string user_id = 1;
+}
+message TourPurchaseToken {
+  string id = 1;
+  string user_id = 2;
+  string tour_id = 3;
+  string tour_name = 4;
+  double price = 5;
+  google.protobuf.Timestamp purchased_at = 6;
+}
+message CheckoutResponse {
+  repeated TourPurchaseToken tokens = 1;
+}
+
+message GetTokensRequest {
+  string user_id = 1;
+}
+message GetTokensResponse {
+  repeated TourPurchaseToken tokens = 1;
+}
+
+service ShoppingService {
+  rpc AddToCart(AddToCartRequest) returns (AddToCartResponse);
+  rpc RemoveFromCart(RemoveFromCartRequest) returns (RemoveFromCartResponse);
+  rpc GetCart(GetCartRequest) returns (GetCartResponse);
+  rpc Checkout(CheckoutRequest) returns (CheckoutResponse);
+  rpc GetTokens(GetTokensRequest) returns (GetTokensResponse);
+}

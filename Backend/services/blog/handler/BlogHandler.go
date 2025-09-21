@@ -52,7 +52,7 @@ func (handler *BlogHandler) GetById(writer http.ResponseWriter, req *http.Reques
 func (handler *BlogHandler) Create(writer http.ResponseWriter, req *http.Request) {
 	// Check content type to determine how to parse request
 	contentType := req.Header.Get("Content-Type")
-	
+
 	var blog *model.Blog
 	var err error
 
@@ -181,7 +181,7 @@ func (handler *BlogHandler) Update(writer http.ResponseWriter, req *http.Request
 
 func (handler *BlogHandler) GetAllByUser(writer http.ResponseWriter, req *http.Request) {
 	userID := mux.Vars(req)["userId"]
-
+	println("Fetching blogs for userID:", userID)
 	writer.Header().Set("Content-Type", "application/json")
 
 	blogs, err := handler.BlogService.GetAllByUser(userID)

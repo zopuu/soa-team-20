@@ -1,0 +1,24 @@
+<div class="container">
+  <h2>My Purchased Tours</h2>
+
+  <div *ngIf="loading">Loading your tours...</div>
+  <div *ngIf="!loading && myTours.length === 0">You haven’t purchased any tours yet.</div>
+
+  <div class="tour-list" *ngIf="myTours.length > 0">
+    <div class="tour-card" *ngFor="let tour of myTours">
+      <img [src]="tour.imageUrl" alt="{{ tour.title }}" class="tour-img" />
+      <div class="tour-info">
+        <h3>{{ tour.title }}</h3>
+        <p>{{ tour.description }}</p>
+        <p><strong>Duration:</strong> {{ tour.duration }} days</p>
+        <p><strong>Length:</strong> {{ tour.length }} km</p>
+        <p><strong>Price:</strong> {{ tour.price | currency }}</p>
+        <p><strong>First keypoint:</strong> {{ tour.firstKeypoint }}</p>
+        <p *ngIf="tour.recensions.length > 0">
+          <strong>Recensions:</strong> {{ tour.recensions[0] }}
+        </p>
+      </div>
+      <button (click)="viewTour(tour.id)">View Tour</button>
+    </div>
+  </div>
+</div>
