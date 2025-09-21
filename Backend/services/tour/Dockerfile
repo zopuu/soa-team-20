@@ -1,12 +1,18 @@
-FROM golang:1.24.6 AS builder
-WORKDIR /app
-COPY go.mod go.sum ./
-RUN go mod download
-COPY . .
-RUN go build -o tourservice .
+# syntax=docker/dockerfile:1
 
-FROM debian:bookworm-slim
+FROM golang:1.24 AS builder
 WORKDIR /app
-COPY --from=builder /app/tourservice .
+
+COPY services/tour ./services/tour
+COPY common/obs   ./common/obs
+
+WORKDIR /app/services/tour
+RUN go mod tidy
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/tourservice .
+
+FROM alpine:3.19
+WORKDIR /app
+COPY --from=builder /out/tourservice /usr/local/bin/tourservice
 EXPOSE 8080
-CMD ["./tourservice"]
+ENV MONGO_URI=mongodb://tourmongodb:27017
+ENTRYPOINT ["tourservice"]

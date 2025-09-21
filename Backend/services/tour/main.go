@@ -13,6 +13,8 @@ import (
 	"tour.xws.com/handler"
 	"tour.xws.com/repository"
 	"tour.xws.com/service"
+
+	obs "github.com/zopuu/soa-team-20/common/obs"
 )
 
 type MongoCollections struct {
@@ -60,7 +62,8 @@ func cors(next http.Handler) http.Handler {
 
 		// Allow browsers to send these in preflight
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Request-ID, X-Trace-Id")
+		w.Header().Set("Access-Control-Expose-Headers", "X-Request-ID, X-Trace-Id")
 		// If you use cookies/Authorization header and need them on the browser:
 		// w.Header().Set("Access-Control-Allow-Credentials", "true")
 
@@ -75,6 +78,11 @@ func cors(next http.Handler) http.Handler {
 
 func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyPointHandler, locationHandler *handler.CurrentLocationHandler, ratingHandler *handler.TourRatingHandler) {
 	router := mux.NewRouter().StrictSlash(true)
+
+	// middleware: logging
+	logger := obs.NewLogger("tourservice")
+	router.Use(obs.TraceMiddleware)
+	router.Use(obs.AccessLogMiddleware(logger))
 
 	//TOUR ENDPOINTS
 	router.HandleFunc("/tours", tourHandler.GetAll).Methods("GET")
@@ -105,8 +113,10 @@ func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyP
 
 	handlerWithCors := cors(router)
 
-	println("Server starting")
-	log.Fatal(http.ListenAndServe(":8080", handlerWithCors))
+	logger.Info("starting_server", obs.F("addr", ":8080"))
+	if err := http.ListenAndServe(":8080", handlerWithCors); err != nil {
+		logger.Fatal("server_exit", obs.Err(err))
+	}
 }
 
 func main() {

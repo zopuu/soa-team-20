@@ -33,3 +33,5 @@ func NewLogger(service string) *zap.Logger {
 	}
 	return zap.New(core).With(zap.String("service", service))
 }
+func F(k string, v any) zap.Field { return zap.Any(k, v) }
+func Err(err error) zap.Field     { return zap.Error(err) }

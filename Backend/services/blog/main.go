@@ -8,7 +8,6 @@ import (
 	"time"
 
 	obs "github.com/zopuu/soa-team-20/common/obs"
-	"go.uber.org/zap"
 
 	"blog.xws.com/handler"
 	"blog.xws.com/repository"
@@ -121,8 +120,10 @@ func startServer(handler *handler.BlogHandler, commentHandler *handler.CommentHa
 
 	handlerWithCors := cors(router)
 
-	l.Info("starting_server", zap.String("addr", ":8080"))
-    log.Fatal(http.ListenAndServe(":8080", handlerWithCors))
+	l.Info("starting_server", obs.F("addr", ":8080"))
+    if err := http.ListenAndServe(":8080", handlerWithCors); err != nil {
+        l.Fatal("server_exit", obs.Err(err))
+    }
 }
 func main() {
 	collections := initMongoDB()
