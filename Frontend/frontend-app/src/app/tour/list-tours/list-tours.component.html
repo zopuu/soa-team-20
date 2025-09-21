@@ -26,7 +26,7 @@
             Rate the tour
           </button>
           <button type="button" (click)="openRatings(t.id)" class="small">View tour ratings</button>
-          <button type="button" (click)="rateTour(t.id)" class="small" *ngIf="currentUserRole === 'Tourist'">
+          <button type="button" (click)="startTour(t.id)" class="small" *ngIf="currentUserRole === 'Tourist'">
             Start tour
           </button>
         </div>

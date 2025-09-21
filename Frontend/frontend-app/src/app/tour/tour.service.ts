@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Tour } from './tour.model';
 import { TourDto } from './tour.dto';
+import { Coordinates } from './keypoint.model';
 
 export interface TourRating {
   id?: string;
@@ -75,5 +76,32 @@ export class TourService {
 // }
   getRatings(tourId: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/${tourId}/reviews`);
+  }
+
+  // tour-exec.service.ts
+  startExecution(payload: { userId: string; tourId: string }) {
+    return this.http.post(`${this.apiUrl}/tour-executions/start`, payload);
+  }
+
+  checkProximity(userId: number | string, coords: Coordinates) {
+    return this.http.post<{
+      reached: boolean;
+      distanceMeters: number;
+      nextKeyPoint?: { id: string; title: string };
+      justCompletedPoint?: { id: string; title: string };
+      remainingCount: number;
+      completedSession: boolean;
+    }>(`${this.apiUrl}/tour-executions/check`, {
+      userId: String(userId),
+      coords
+    });
+  }
+
+  getActive(userId: number | string) {
+    return this.http.post<any>(`${this.apiUrl}/tour-executions/active`, { userId: String(userId) });
+  }
+
+  abandonExecution(userId: number | string) {
+    return this.http.post(`${this.apiUrl}/tour-executions/abandon`, { userId: String(userId) });
   }
 }

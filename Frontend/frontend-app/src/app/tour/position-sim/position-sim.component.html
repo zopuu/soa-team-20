@@ -1,13 +1,51 @@
 <h2 class="title">Position Simulator</h2>
 
-<div class="hint" *ngIf="!hasKnownPosition">
-  No selected location — please select where you are now.
-</div>
+<div class="layout">
+  <div class="left">
+    <!-- controls row -->
+    <div class="controls">
+      <button class="btn btn-danger" (click)="onAbandonTour()">Abandon Tour</button>
+      <div class="chip" *ngIf="distanceMeters !== undefined">
+        <strong>Next:</strong>
+        <span>{{ nextTitle || 'checkpoint' }}</span>
+        <span>•</span>
+        <span>{{ distanceMeters | number:'1.0-0' }} m away</span>
+      </div>
+    </div>
 
-<div #map class="map"></div>
+    <div class="hint" *ngIf="!hasKnownPosition">
+      No selected location — please select where you are now.
+    </div>
 
-<div class="info">
-  <ng-template #noSel>
-    <span *ngIf="hasKnownPosition === false">Click on the map to set your location.</span>
-  </ng-template>
+    <div #map class="map"></div>
+
+    <div class="info">
+      <span *ngIf="statusMsg">{{ statusMsg }}</span>
+    </div>
+
+    <!-- tiny toast -->
+    <div class="toast" *ngIf="toastMsg">{{ toastMsg }}</div>
+  </div>
+
+  <aside class="right">
+    <div class="panel">
+      <h3>Progress</h3>
+      <div class="progress-row">
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width.%]="progressPct"></div>
+        </div>
+        <span class="progress-label">{{ visited.length }} / {{ totalKeypoints }}</span>
+      </div>
+
+      <h4>Visited keypoints</h4>
+      <div *ngIf="visited.length === 0" class="muted">No keypoints visited yet.</div>
+
+      <ul class="visited-list">
+        <li *ngFor="let v of visited">
+          <div class="v-title">{{ v.title }}</div>
+          <div class="v-time">{{ v.visitedAt | date:'short' }}</div>
+        </li>
+      </ul>
+    </div>
+  </aside>
 </div>
