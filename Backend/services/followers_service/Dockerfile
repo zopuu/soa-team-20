@@ -1,18 +1,18 @@
-# Build stage
+# syntax=docker/dockerfile:1
+
 FROM golang:1.24 AS builder
 WORKDIR /app
 
-COPY go.mod go.sum ./
-RUN go mod download
+# copy only what we need, from the root context
+COPY services/followers_service ./services/followers_service
+COPY common/obs                 ./common/obs
 
-COPY . .
-# build the gRPC server
-RUN CGO_ENABLED=0 GOOS=linux go build -o followers-service ./cmd/server
+WORKDIR /app/services/followers_service
+RUN go mod tidy
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/followers-service ./cmd/server
 
-# Runtime stage
 FROM alpine:3.19
 WORKDIR /app
-COPY --from=builder /app/followers-service .
-
+COPY --from=builder /out/followers-service /usr/local/bin/followers-service
 EXPOSE 50051
-CMD ["./followers-service"]
+ENTRYPOINT ["followers-service"]

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net"
 
@@ -12,9 +11,12 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"google.golang.org/grpc"
+
+	obs "github.com/zopuu/soa-team-20/common/obs"
 )
 
 func main() {
+	logger := obs.NewLogger("followers")
 	// Connect Neo4j
 	driver := db.NewDriver()
 	defer db.CloseDriver(context.Background(), driver)
@@ -22,15 +24,20 @@ func main() {
 	// gRPC server
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		logger.Fatal("listen_error", obs.Err(err))
 	}
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			obs.GRPCTraceUnary(),
+			obs.GRPCAccessLogUnary(logger),
+		),
+	)
 	followerspb.RegisterFollowersServiceServer(grpcServer, &server.FollowersServer{Driver: driver})
 	reflection.Register(grpcServer)
 
-	fmt.Println("Followers service running on :50051")
+	logger.Info("starting_grpc", obs.F("addr", ":50051"))
 	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+		log.Fatal("serve_error", obs.Err(err))
 	}
 }

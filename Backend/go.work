@@ -4,5 +4,6 @@ use (
 	./common/obs
 	./gateway
 	./services/blog
+	./services/followers_service
 	./services/tour
 )
