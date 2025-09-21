@@ -103,3 +103,33 @@ func (h *TourExecutionHandler) GetActive(w http.ResponseWriter, r *http.Request)
     w.Header().Set("Content-Type", "application/json")
     _ = json.NewEncoder(w).Encode(te)
 }
+
+type activeForTourReq struct {
+	UserId string `json:"userId"`
+	TourId string `json:"tourId"`
+}
+
+func (h *TourExecutionHandler) GetActiveForTour(w http.ResponseWriter, r *http.Request) {
+	var req activeForTourReq
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest); return
+	}
+	if req.UserId == "" || req.TourId == "" {
+		http.Error(w, "userId and tourId required", http.StatusBadRequest); return
+	}
+	tourUUID, err := uuid.Parse(req.TourId)
+	if err != nil {
+		http.Error(w, "invalid tourId", http.StatusBadRequest); return
+	}
+
+	te, err := h.Svc.GetActiveByUserAndTour(req.UserId, tourUUID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest); return
+	}
+	if te == nil {
+		w.WriteHeader(http.StatusNoContent) // 204 if none
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(te)
+}

@@ -20,6 +20,12 @@ type TourExecutionService struct {
 }
 
 func (s *TourExecutionService) Start(userId string, tourId uuid.UUID) (*model.TourExecution, error) {
+	
+	if existing, err := s.TourExecRepo.GetActiveByUserAndTour(userId, tourId); err != nil {
+		return nil, err
+	} else if existing != nil {
+		return existing, nil
+	}
 	// 0) Prevent multiple actives for this user
 	// if active, err := s.TourExecRepo.GetActiveByUserId(userId); err != nil {
 	// 	return nil, err
@@ -80,6 +86,7 @@ func (s *TourExecutionService) Start(userId string, tourId uuid.UUID) (*model.To
 		TotalKeyPoints:         len(kps),
 		NextKeyPointIndex:      0,
 		LastKnownCoords:        loc.Coordinates, // if you keep this field too
+		KeyPointsCompletitionTimes: []time.Time{},
 	}
 
 	// 6) Persist execution
@@ -102,6 +109,10 @@ type ProximityCheckResult struct {
 	RemainingCount      int                  `json:"remainingCount"`
 	JustCompletedPoint  *model.KeyPointRef   `json:"justCompletedPoint,omitempty"`
 	CompletedSession    bool                 `json:"completedSession"`
+}
+
+func (s *TourExecutionService) GetActiveByUserAndTour(userId string, tourId uuid.UUID) (*model.TourExecution, error) {
+	return s.TourExecRepo.GetActiveByUserAndTour(userId, tourId)
 }
 
 func (s *TourExecutionService) CheckProximity(userId string, coords model.Coordinates) (*ProximityCheckResult, error) {
@@ -146,6 +157,9 @@ func (s *TourExecutionService) CheckProximity(userId string, coords model.Coordi
 			KeyPointRef: next,
 			VisitedAt:   now,
 		})
+
+        te.KeyPointsCompletitionTimes = append(te.KeyPointsCompletitionTimes, now)
+
 		res.Reached = true
 		res.JustCompletedPoint = &next
 		res.RemainingCount = len(te.KeyPointsRemaining)

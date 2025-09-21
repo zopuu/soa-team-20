@@ -122,13 +122,12 @@ func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyP
 	router.HandleFunc("/simulator/location/{userId}", locationHandler.Get).Methods("GET")
 	router.HandleFunc("/simulator/location", locationHandler.Set).Methods("PUT")
 
-	// TOUR EXECUTION ENDPOINTS (add these)
-	// in startServer(...)
-	// new — nested under /tours
-	router.HandleFunc("/tours/tour-executions/start",   tourExecHandler.Start).Methods("POST")
-	router.HandleFunc("/tours/tour-executions/check",   tourExecHandler.CheckProximity).Methods("POST")
-	router.HandleFunc("/tours/tour-executions/abandon", tourExecHandler.Abandon).Methods("POST")
-	router.HandleFunc("/tours/tour-executions/active",  tourExecHandler.GetActive).Methods("GET")
+	router.HandleFunc("/tours/tour-executions/start",           tourExecHandler.Start).Methods("POST")
+	router.HandleFunc("/tours/tour-executions/check",           tourExecHandler.CheckProximity).Methods("POST")
+	router.HandleFunc("/tours/tour-executions/abandon",         tourExecHandler.Abandon).Methods("POST")
+	router.HandleFunc("/tours/tour-executions/active",          tourExecHandler.GetActive).Methods("POST") // <-- was GET
+	router.HandleFunc("/tours/tour-executions/active-for-tour", tourExecHandler.GetActiveForTour).Methods("POST")
+
 
 
 	router.Methods(http.MethodOptions).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

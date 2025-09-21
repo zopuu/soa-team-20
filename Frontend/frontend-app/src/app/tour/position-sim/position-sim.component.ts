@@ -2,11 +2,12 @@ import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild } from '@ang
 import * as L from 'leaflet';
 import { TouristLocationService, Coordinates } from '../tourist-location.service';
 import { AuthService } from '../../auth/auth.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { KeypointService } from '../keypoint.service';
 import { KeyPoint } from '../keypoint.model';
 import { TourService } from '../tour.service';
 import { EMPTY, interval, Subscription, switchMap } from 'rxjs';
+import { Location as NgLocation } from '@angular/common';
 type VisitedRow = { id: string; title: string; visitedAt: Date };
 
 @Component({
@@ -34,7 +35,9 @@ export class PositionSimComponent implements AfterViewInit, OnDestroy {
   tourId?: string;
   fromStartTour = false;
   //private routeControl?: any;   // routing line connecting checkpoints
-
+  private countdownSub?: Subscription;
+  countdownSec = 0;
+  private nextCheckAtTs = 0; // epoch ms of next proximity call
 
   userId?: number;
   selected?: Coordinates;
@@ -59,6 +62,8 @@ export class PositionSimComponent implements AfterViewInit, OnDestroy {
     private route: ActivatedRoute,     // <-- added
     private keypoints: KeypointService, // <-- added
     private tours: TourService,
+    private location: NgLocation,
+    private router: Router
   ) {}
 
   ngAfterViewInit(): void {
@@ -94,7 +99,49 @@ export class PositionSimComponent implements AfterViewInit, OnDestroy {
     });
   }
 
+  private goBackOrFallback() {
+    // If there’s actually somewhere to go back to, do it.
+    if (window.history.length > 1) {
+      this.location.back();
+    } else {
+      // Fallback: change this to wherever you want to land
+      this.router.navigate(['/tours']);
+    }
+  }
+
+
+  // onAbandonTour() {
+  //   if (!this.userId) return;
+
+  //   this.tours.abandon(this.userId).subscribe({
+  //     next: () => {
+  //       // optional toast
+  //       this.toast('Tour abandoned');
+  //       // clean up
+  //       if (this.map) {
+  //         if (this.routeControl) {
+  //           this.map.removeControl(this.routeControl);
+  //           this.routeControl = undefined;
+  //         }
+  //         this.map.remove();
+  //         this.map = undefined;
+  //       }
+  //       // go back to previous page
+  //       this.location.back();
+  //     },
+  //     error: (err) => {
+  //       console.error('Abandon failed', err);
+  //       this.toast('Failed to abandon');
+  //     }
+  //   });
+  // }
+
+
   private startProximityTicker() {
+    // schedule first “next check” and start the 1s countdown UI
+    this.nextCheckAtTs = Date.now() + 10_000;
+    this.startCountdown();
+
     this.proximitySub = interval(10_000).pipe(
       switchMap(() => {
         if (!this.userId || !this.selected || !this.tourId) return EMPTY;
@@ -102,7 +149,10 @@ export class PositionSimComponent implements AfterViewInit, OnDestroy {
       })
     ).subscribe({
       next: (res) => {
-        // always update “distance to next”
+        // set next window and let the countdown tick
+        this.nextCheckAtTs = Date.now() + 10_000;
+
+        // update UI
         this.nextTitle = res?.nextKeyPoint?.title ?? undefined;
         this.distanceMeters = typeof res?.distanceMeters === 'number' ? res.distanceMeters : undefined;
 
@@ -113,16 +163,28 @@ export class PositionSimComponent implements AfterViewInit, OnDestroy {
         if (res?.completedSession) {
           this.toast('Tour completed 🎉');
           this.stopTicker();
+          setTimeout(() => this.goBackOrFallback(), 1500);
         }
       },
       error: (err) => console.error('Proximity ticker failed', err)
     });
   }
 
+  private startCountdown() {
+    this.countdownSub?.unsubscribe();
+    this.countdownSub = interval(1000).subscribe(() => {
+      const msLeft = this.nextCheckAtTs - Date.now();
+      this.countdownSec = msLeft > 0 ? Math.ceil(msLeft / 1000) : 0;
+    });
+  }
+
   private stopTicker() {
     this.proximitySub?.unsubscribe();
     this.proximitySub = undefined;
+    this.countdownSub?.unsubscribe();
+    this.countdownSub = undefined;
   }
+
 
   private initMap() {
     this.map = L.map(this.mapEl.nativeElement, { center: [44.7866, 20.4489], zoom: 6 });
@@ -275,21 +337,21 @@ private markVisitedAndRefresh(justCompleted: any) {
         this.hasKnownPosition = true;
         setTimeout(() => (this.statusMsg = ''), 1500);
 
-        this.tours.checkProximity(this.userId!, coords).subscribe({
-          next: (res) => {
-            this.nextTitle = res?.nextKeyPoint?.title ?? undefined;
-            this.distanceMeters = typeof res?.distanceMeters === 'number' ? res.distanceMeters : undefined;
+        // this.tours.checkProximity(this.userId!, coords).subscribe({
+        //   next: (res) => {
+        //     this.nextTitle = res?.nextKeyPoint?.title ?? undefined;
+        //     this.distanceMeters = typeof res?.distanceMeters === 'number' ? res.distanceMeters : undefined;
 
-            if (res?.reached && res?.justCompletedPoint?.id) {
-              this.markVisitedAndRefresh(res.justCompletedPoint);
-            }
-            if (res?.completedSession) {
-              this.toast('Tour completed 🎉');
-              this.stopTicker();
-            }
-          },
-          error: (err) => console.error('Check proximity failed', err)
-        });
+        //     if (res?.reached && res?.justCompletedPoint?.id) {
+        //       this.markVisitedAndRefresh(res.justCompletedPoint);
+        //     }
+        //     if (res?.completedSession) {
+        //       this.toast('Tour completed 🎉');
+        //       this.stopTicker();
+        //     }
+        //   },
+        //   error: (err) => console.error('Check proximity failed', err)
+        // });
       },
       error: () => { this.statusMsg = 'Failed to save location.'; }
     });
@@ -297,6 +359,7 @@ private markVisitedAndRefresh(justCompleted: any) {
 
   ngOnDestroy(): void {
     if (this.proximitySub) this.proximitySub.unsubscribe();
+    if (this.countdownSub) this.countdownSub.unsubscribe(); // NEW
     if (this.map) {
       if (this.routeControl) {
         this.map.removeControl(this.routeControl);
@@ -307,22 +370,24 @@ private markVisitedAndRefresh(justCompleted: any) {
     }
   }
 
+
   onAbandonTour() {
     if (!this.userId) return;
     const go = confirm('Abandon current tour? This will end the execution.');
     if (!go) return;
 
-    this.tours.abandonExecution(this.userId).subscribe({
+    this.tours.abandon(this.userId).subscribe({
       next: () => {
         this.toast('Tour abandoned');
-        // clear local state
+        // stop polling and clear local UI state
         this.stopTicker();
         this.visitedIds.clear();
         this.visited = [];
         this.progressPct = 0;
         this.nextTitle = undefined;
         this.distanceMeters = undefined;
-        // optionally clear remaining markers
+
+        // clear map layers
         if (this.checkpointLayer && this.map) {
           this.map.removeLayer(this.checkpointLayer);
           this.checkpointLayer = undefined;
@@ -331,6 +396,13 @@ private markVisitedAndRefresh(justCompleted: any) {
           this.map.removeControl(this.routeControl);
           this.routeControl = undefined;
         }
+        if (this.map) {
+          this.map.remove();
+          this.map = undefined;
+        }
+
+        // go back to previous page
+        this.location.back();
       },
       error: (err) => {
         console.error(err);
@@ -338,5 +410,6 @@ private markVisitedAndRefresh(justCompleted: any) {
       }
     });
   }
+
 
 }
