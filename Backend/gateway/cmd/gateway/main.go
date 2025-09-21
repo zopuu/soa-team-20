@@ -17,6 +17,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/zopuu/soa-team-20/Backend/gateway/internal/config"
@@ -39,6 +40,14 @@ func withCorrHeaders(h http.Handler) http.HandlerFunc {
         r.Header.Set("X-Trace-Id", getTraceID(r))
         h.ServeHTTP(w, r)
     }
+}
+// gRPC kontekst sa korelacionim ID-jevima
+func grpcCtxWithTrace(r *http.Request) context.Context {
+    md := metadata.Pairs(
+        "x-request-id", middleware.GetReqID(r.Context()),
+        "x-trace-id",   getTraceID(r),
+    )
+    return metadata.NewOutgoingContext(r.Context(), md)
 }
 
 func main() {
@@ -178,6 +187,8 @@ func main() {
 	// r.Get("/api/bff/profile", func(w http.ResponseWriter, r *http.Request) { ... stakeClient.GetProfile(ctx, req) ... })
 	// ----------------------------------------------------
 
+	
+
 	// Connect to Followers gRPC service
 	grpcConn, err := grpc.Dial(cfg.FollowersGRPCAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -201,7 +212,7 @@ func main() {
 				return
 			}
 
-			resp, err := followersClient.Follow(r.Context(), &followerspb.FollowRequest{
+			resp, err := followersClient.Follow(grpcCtxWithTrace(r), &followerspb.FollowRequest{
 				FollowerId: req.FollowerId,
 				FolloweeId: req.FolloweeId,
 			})
@@ -224,7 +235,7 @@ func main() {
 				return
 			}
 
-			resp, err := followersClient.Unfollow(r.Context(), &followerspb.FollowRequest{
+			resp, err := followersClient.Unfollow(grpcCtxWithTrace(r), &followerspb.FollowRequest{
 				FollowerId: req.UserID,
 				FolloweeId: req.TargetID,
 			})
@@ -238,7 +249,7 @@ func main() {
 
 		rr.Get("/{id}/following", func(w http.ResponseWriter, r *http.Request) {
 			id := chi.URLParam(r, "id")
-			resp, err := followersClient.GetFollowing(r.Context(), &followerspb.UserRequest{UserId: id})
+			resp, err := followersClient.GetFollowing(grpcCtxWithTrace(r), &followerspb.UserRequest{UserId: id})
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -248,7 +259,7 @@ func main() {
 
 		rr.Get("/{id}/followers", func(w http.ResponseWriter, r *http.Request) {
 			id := chi.URLParam(r, "id")
-			resp, err := followersClient.GetFollowers(r.Context(), &followerspb.UserRequest{UserId: id})
+			resp, err := followersClient.GetFollowers(grpcCtxWithTrace(r), &followerspb.UserRequest{UserId: id})
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -258,7 +269,7 @@ func main() {
 
 		rr.Get("/recommendations/{id}", func(w http.ResponseWriter, r *http.Request) {
 			id := chi.URLParam(r, "id")
-			resp, err := followersClient.GetRecommendations(r.Context(), &followerspb.UserRequest{UserId: id})
+			resp, err := followersClient.GetRecommendations(grpcCtxWithTrace(r), &followerspb.UserRequest{UserId: id})
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -268,6 +279,9 @@ func main() {
 	})
 
 	addr := ":" + cfg.Port
-	log.Printf("API Gateway listening on %s", addr)
-	log.Fatal(http.ListenAndServe(addr, r))
+	logger.Info("gateway_listening", zap.String("addr", addr))
+	if err := http.ListenAndServe(addr, r); err != nil {
+		logger.Fatal("server_exit", zap.Error(err))
+	}
+
 }
