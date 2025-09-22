@@ -300,7 +300,11 @@ services:
         - /sys:/sys:ro
         - /var/lib/docker/:/var/lib/docker:ro
         - /dev/disk/:/dev/disk:ro
+        - /var/run/docker.sock:/var/run/docker.sock
         privileged: true
+        command:
+            - "--docker_only=true"            # force Docker runtime
+            - "--housekeeping_interval=10s"   # more frequent updates
         networks:
         - backend
 
