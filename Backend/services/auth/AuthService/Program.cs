@@ -11,6 +11,8 @@ using System.Text.Json.Serialization;
 using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Compact;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +30,32 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 builder.Host.UseSerilog();
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(r => r.AddService("authservice", serviceVersion: "1.0.0"))
+    .WithTracing(t => t
+        .AddAspNetCoreInstrumentation(o => {
+            o.RecordException = true;
+
+            o.EnrichWithHttpRequest = (activity, req) => {
+                activity.SetTag("http.request_content_length", req.ContentLength);
+            };
+            o.EnrichWithHttpResponse = (activity, res) => {
+                activity.SetTag("http.response_content_length", res.ContentLength);
+            };
+            // opciono:
+            o.EnrichWithException = (activity, ex) => {
+                activity.SetTag("exception.message", ex.Message);
+            };
+        })
+        .AddHttpClientInstrumentation()
+        .AddOtlpExporter(o =>
+        {
+            o.Endpoint = new Uri("http://otel-collector:4317");
+        })
+        .AddConsoleExporter()
+
+    );
+
 
 
 // CORS

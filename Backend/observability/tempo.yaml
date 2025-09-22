@@ -1,0 +1,42 @@
+server:
+  http_listen_port: 3200
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc: {}
+        http: {}
+
+ingester:
+  lifecycler:
+    ring:
+      kvstore:
+        store: inmemory
+      replication_factor: 1
+  # small blocks so you can see data quickly
+  trace_idle_period: 10s
+  max_block_bytes: 1048576   # 1 MB
+  max_block_duration: 5m
+
+compactor:
+  working_directory: /tmp/tempo
+  compaction:
+    block_retention: 24h
+
+storage:
+  trace:
+    backend: local
+    local:
+      path: /tmp/tempo
+
+query_frontend:
+  # enable the endpoints Grafana uses for search/tag values
+  search:
+    query_backend: 0
+  trace_by_id:
+    enabled: true
+  tag_values:
+    enabled: true
+  tag_names:
+    enabled: true
