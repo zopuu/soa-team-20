@@ -90,8 +90,11 @@ func cors(next http.Handler) http.Handler {
 
 func startServer(handler *handler.BlogHandler, commentHandler *handler.CommentHandler, likeHandler *handler.LikeHandler) {
 	l := obs.NewLogger("blogservice")
+	m := obs.NewMetrics("blogservice")
 	
 	router := mux.NewRouter().StrictSlash(true)
+	router.Use(m.HTTPMiddleware)
+	router.Handle("/metrics", m.Handler()).Methods("GET")
 
 	router.HandleFunc("/blogs", handler.GetAll).Methods("GET")
 	router.HandleFunc("/blogs/{id}", handler.GetById).Methods("GET")

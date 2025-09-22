@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
@@ -18,7 +19,6 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/semconv/v1.27.0"
-	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 
 	tb "github.com/didip/tollbooth/v7"
 	tbchi "github.com/didip/tollbooth_chi"
@@ -35,6 +35,7 @@ import (
 	followerspb "github.com/zopuu/soa-team-20/Backend/services/followers_service/proto/followerspb"
 	shoppingpb "github.com/zopuu/soa-team-20/Backend/services/shopping_service/proto/shoppingpb"
 	tourpb "github.com/zopuu/soa-team-20/Backend/services/tour/proto"
+	"github.com/zopuu/soa-team-20/common/obs"
 )
 
 type ctxKey string
@@ -111,6 +112,8 @@ func main() {
 
 
 	r := chi.NewRouter()
+	m := obs.NewMetrics("gateway")
+	r.Use(m.HTTPMiddleware)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Timeout(40 * time.Second))
@@ -161,6 +164,7 @@ func main() {
 		Issuer:   cfg.JwtIssuer,
 		Audience: cfg.JwtAudience,
 	}
+	r.Handle("/metrics", m.Handler())
 
 	// ---- Proxies ----
 	authProxy, _ := proxy.NewHTTPReverseProxy(proxy.Options{

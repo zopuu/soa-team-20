@@ -16,6 +16,7 @@ import (
 
 	"github.com/zopuu/soa-team-20/Backend/services/shopping_service/internal/api"
 	shoppingpb "github.com/zopuu/soa-team-20/Backend/services/shopping_service/proto/shoppingpb"
+	obs "github.com/zopuu/soa-team-20/common/obs"
 )
 
 func mustGetenv(key, def string) string {
@@ -43,7 +44,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen %v", err)
 	}
-	s := grpc.NewServer()
+	m := obs.NewMetrics("shopping_service")
+	s := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			m.GRPCUnary(),
+		),
+	)
+	go func(){ _ = m.ServeMetrics(":2112") }()
 	shoppingpb.RegisterShoppingServiceServer(s, api.NewServer(db))
 
 	reflection.Register(s)

@@ -88,11 +88,22 @@ func startGRPCServer(tourService *service.TourService) {
 	if err != nil {
 		log.Fatalf("Failed listen %s: %v", ":50052", err)
 	}
+	m := obs.NewMetrics("tourservice_grpc")
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			m.GRPCUnary(),
+		),
+	)
+	// expose metrics for gRPC on an internal port
+	go func() { _ = m.ServeMetrics(":2112") }()  // no host publish needed in compose
+	
 	tourGRPCServer := tourgrpc.NewTourGRPCServer(tourService)
 	tourpb.RegisterTourServiceServer(grpcServer, tourGRPCServer)
 	reflection.Register(grpcServer)
+
+	
+
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("gRPC serve error: %v", err)
@@ -104,6 +115,9 @@ func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyP
 
 	// middleware: logging
 	logger := obs.NewLogger("tourservice")
+	m := obs.NewMetrics("tourservice")
+	router.Use(m.HTTPMiddleware)
+	router.Handle("/metrics", m.Handler()).Methods("GET")
 	router.Use(obs.TraceMiddleware)
 	router.Use(obs.AccessLogMiddleware(logger))
 

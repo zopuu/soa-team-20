@@ -17,6 +17,7 @@ import (
 
 func main() {
 	logger := obs.NewLogger("followers")
+	m := obs.NewMetrics("followers_service")
 	// Connect Neo4j
 	driver := db.NewDriver()
 	defer db.CloseDriver(context.Background(), driver)
@@ -29,10 +30,12 @@ func main() {
 
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
+			m.GRPCUnary(),
 			obs.GRPCTraceUnary(),
 			obs.GRPCAccessLogUnary(logger),
 		),
 	)
+	go func(){ _ = m.ServeMetrics(":2112") }()   // internal metrics endpoint
 	followerspb.RegisterFollowersServiceServer(grpcServer, &server.FollowersServer{Driver: driver})
 	reflection.Register(grpcServer)
 

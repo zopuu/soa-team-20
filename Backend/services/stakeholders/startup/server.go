@@ -15,6 +15,7 @@ import (
 	"github.com/rs/cors"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	obs "github.com/zopuu/soa-team-20/common/obs"
 )
 
 type Server struct {
@@ -55,6 +56,10 @@ func (server *Server) Start() {
 	userHandler := handler.NewUserHandler(userService)
 
 	router := mux.NewRouter()
+	m := obs.NewMetrics("stakeholders")
+
+	router.Use(m.HTTPMiddleware)
+	router.Handle("/metrics", m.Handler()).Methods("GET")
 
 	router.HandleFunc("/api/users/userById/{id}", userHandler.GetById).Methods(http.MethodGet)
 	router.HandleFunc("/api/users/updateUser/{id}", userHandler.UpdateUser).Methods(http.MethodPut)

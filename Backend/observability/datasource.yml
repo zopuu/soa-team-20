@@ -12,6 +12,11 @@ datasources:
     type: tempo
     access: proxy
     url: http://tempo:3200
-    isDefault: true
+    isDefault: false
     jsonData:
     httpMethod: GET
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true

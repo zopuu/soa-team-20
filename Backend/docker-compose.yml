@@ -23,7 +23,7 @@ services:
         environment:
             POSTGRES_DB: auth
             POSTGRES_USER: postgres
-            POSTGRES_PASSWORD: 123
+            POSTGRES_PASSWORD: password
         ports:
             - "55432:5432"
         volumes:
@@ -34,8 +34,8 @@ services:
     # Go stakeholders service (no new DB)
     stakeholders:
         build:
-            context: ./services/stakeholders
-            dockerfile: Dockerfile
+            context: .
+            dockerfile: services/stakeholders/Dockerfile
         image: stakeholders:latest
         container_name: "stakeholdersService"
         ports:
@@ -154,8 +154,8 @@ services:
 
     shopping-service:
         build:
-            context: ./services/shopping_service
-            dockerfile: Dockerfile
+            context: .
+            dockerfile: services/shopping_service/Dockerfile
         container_name: shopping-service
         ports:
             - "50053:50053"
@@ -186,7 +186,7 @@ services:
             - TOUR_BASE=http://tourservice:8080
             - FOLLOWERS_GRPC_ADDR=followers-service:50051
             - TOUR_GRPC_ADDR=tourservice:50052
-            - SHOPPING_GRPC_ADDR=shopping_service:50053
+            - SHOPPING_GRPC_ADDR=shopping-service:50053
             - JWT_SECRET=aiugbherajndfuieajdvnaiuerkjdfnaeui
             - JWT_ISSUER=AuthService
             - JWT_AUDIENCE=AuthServiceClient
@@ -259,6 +259,21 @@ services:
         depends_on: [tempo]
         networks:
             - backend
+    prometheus:
+        image: prom/prometheus:v2.54.1
+        container_name: prometheus
+        ports: ["9090:9090"]
+        volumes:
+        - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+        networks: [backend]
+        depends_on:
+        - gateway
+        - blogservice
+        - tourservice
+        - stakeholders
+        - followers-service
+        - shopping-service
+
 
 volumes:
     auth_data:
