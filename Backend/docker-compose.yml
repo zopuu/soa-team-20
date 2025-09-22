@@ -273,6 +273,38 @@ services:
         - stakeholders
         - followers-service
         - shopping-service
+    node-exporter:
+        image: prom/node-exporter:v1.8.1
+        container_name: node-exporter
+        command:
+        - '--path.rootfs=/host'
+        - '--path.procfs=/host/proc'
+        - '--path.sysfs=/host/sys'
+        pid: "host"
+        volumes:
+        - /:/host:ro
+        - /proc:/host/proc:ro
+        - /sys:/host/sys:ro
+        ports:
+        - "9100:9100"
+        networks:
+        - backend
+    cadvisor:
+        image: gcr.io/cadvisor/cadvisor:v0.49.1
+        container_name: cadvisor
+        ports:
+        - "8084:8080"
+        volumes:
+        - /:/rootfs:ro
+        - /var/run:/var/run:ro
+        - /sys:/sys:ro
+        - /var/lib/docker/:/var/lib/docker:ro
+        - /dev/disk/:/dev/disk:ro
+        privileged: true
+        networks:
+        - backend
+
+
 
 
 volumes:
