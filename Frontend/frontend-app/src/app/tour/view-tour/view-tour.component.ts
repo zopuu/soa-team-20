@@ -37,6 +37,7 @@ export class ViewTourComponent implements OnInit, AfterViewInit, OnDestroy {
   currentUserId?: string;
   currentUserRole?: string;
   isOwner = false;
+  boughtTour = false;
   isEditMode = false;
   editForm: any = {};
   availableTags = [
@@ -76,9 +77,13 @@ export class ViewTourComponent implements OnInit, AfterViewInit, OnDestroy {
   private initializeFromRoute() {
     // prefer snapshot for immediate value, also subscribe to changes
     const sid = this.route.snapshot.paramMap.get('id');
+    const ref = this.route.snapshot.paramMap.get('ref');
     if (sid) {
       this.tourId = sid;
       this.loadTourDetails();
+    }
+    if(ref){
+      this.boughtTour = ref === 'mytours' ? true: false;
     }
 
     this.route.paramMap.subscribe((pm) => {
@@ -139,7 +144,7 @@ export class ViewTourComponent implements OnInit, AfterViewInit, OnDestroy {
         const latlngs: L.LatLng[] = [];
         // If viewer is not owner, only expose the first keypoint
         const kpsToShow =
-          !this.isOwner && (kps || []).length > 0
+          !this.isOwner && !this.boughtTour && (kps || []).length > 0
             ? [(kps || [])[0]]
             : kps || [];
         kpsToShow.forEach((kp: any) => {
@@ -177,7 +182,10 @@ export class ViewTourComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         // Draw street-connected route using Leaflet Routing Machine
         if (latlngs.length > 1) {
-          this.drawRouteForTransportType(latlngs, this.getCurrentTransportType());
+          this.drawRouteForTransportType(
+            latlngs,
+            this.getCurrentTransportType()
+          );
         }
       },
       error: (err) => console.error('failed to load keypoints', err),
@@ -188,10 +196,15 @@ export class ViewTourComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.isEditMode && this.editForm.transportType) {
       return this.editForm.transportType;
     }
-    return this.tour ? this.transportTypeLabel(this.tour.transportType) : 'Walking';
+    return this.tour
+      ? this.transportTypeLabel(this.tour.transportType)
+      : 'Walking';
   }
 
-  private drawRouteForTransportType(latlngs: L.LatLng[], transportType: string) {
+  private drawRouteForTransportType(
+    latlngs: L.LatLng[],
+    transportType: string
+  ) {
     // Remove existing route
     if (this.routeControl) {
       this.map!.removeControl(this.routeControl);
@@ -231,11 +244,13 @@ export class ViewTourComponent implements OnInit, AfterViewInit, OnDestroy {
     this.routeControl.on('routesfound', (e: any) => {
       if (e.routes && e.routes.length > 0) {
         const route = e.routes[0];
-        const distanceKm = (route.summary.totalDistance / 1000); // Convert meters to km
+        const distanceKm = route.summary.totalDistance / 1000; // Convert meters to km
         const durationMin = Math.round(route.summary.totalTime / 60); // Convert seconds to minutes
-        
-        console.log(`Route found: ${distanceKm.toFixed(2)} km, ${durationMin} min`);
-        
+
+        console.log(
+          `Route found: ${distanceKm.toFixed(2)} km, ${durationMin} min`
+        );
+
         // Update tour object if we're in edit mode or if this is the owner
         if (this.isOwner && this.tour) {
           this.tour.distance = Math.round(distanceKm * 100) / 100; // round to 2 decimals
@@ -260,13 +275,16 @@ export class ViewTourComponent implements OnInit, AfterViewInit, OnDestroy {
 
   updateRouteForTransportType(transportType: string) {
     if (!this.tourId || !this.map) return;
-    
+
     // Get current keypoints and redraw route
     this.keypointService.getByTourSorted(this.tourId).subscribe({
       next: (kps) => {
         const latlngs: L.LatLng[] = [];
-        const kpsToShow = !this.isOwner && (kps || []).length > 0 ? [(kps || [])[0]] : kps || [];
-        
+        const kpsToShow =
+          !this.isOwner && (kps || []).length > 0
+            ? [(kps || [])[0]]
+            : kps || [];
+
         kpsToShow.forEach((kp: any) => {
           const lat = kp.coordinates?.latitude;
           const lng = kp.coordinates?.longitude;
@@ -279,7 +297,8 @@ export class ViewTourComponent implements OnInit, AfterViewInit, OnDestroy {
           this.drawRouteForTransportType(latlngs, transportType);
         }
       },
-      error: (err) => console.error('failed to load keypoints for route update', err),
+      error: (err) =>
+        console.error('failed to load keypoints for route update', err),
     });
   }
 
@@ -397,14 +416,16 @@ export class ViewTourComponent implements OnInit, AfterViewInit, OnDestroy {
         this.tour.difficulty = this.editForm.difficulty;
         this.tour.tags = selectedTags;
         this.tour.price = updatedTourDto.price;
-        this.tour.transportType = this.transportTypeToNumber(this.editForm.transportType);
+        this.tour.transportType = this.transportTypeToNumber(
+          this.editForm.transportType
+        );
 
         this.isEditMode = false;
         this.editForm = {};
-        
+
         // Reload the route with new transport type
         this.loadKeypoints();
-        
+
         // Save the updated distance and duration after route calculation
         setTimeout(() => {
           if (this.tour && this.tourId) {
@@ -413,14 +434,15 @@ export class ViewTourComponent implements OnInit, AfterViewInit, OnDestroy {
               distance: this.tour.distance,
               duration: this.tour.duration,
             };
-            
+
             this.tourService.update(this.tourId, finalUpdateDto).subscribe({
               next: () => console.log('Tour distance and duration updated'),
-              error: (err) => console.error('Failed to update route metrics', err),
+              error: (err) =>
+                console.error('Failed to update route metrics', err),
             });
           }
         }, 2000); // Wait 2 seconds for route calculation to complete
-        
+
         console.log('Tour updated successfully');
       },
       error: (err) => {
@@ -515,8 +537,11 @@ export class ViewTourComponent implements OnInit, AfterViewInit, OnDestroy {
 
         if (latlngs.length > 1) {
           // Use routing to get accurate distance and duration
-          this.drawRouteForTransportType(latlngs, this.getCurrentTransportType());
-          
+          this.drawRouteForTransportType(
+            latlngs,
+            this.getCurrentTransportType()
+          );
+
           // Wait for route calculation and then update the tour
           setTimeout(() => {
             if (this.tour && this.tourId) {
@@ -531,13 +556,17 @@ export class ViewTourComponent implements OnInit, AfterViewInit, OnDestroy {
                 duration: this.tour.duration,
                 status: this.statusToNumber(this.tour.status),
                 difficulty: this.difficultyToNumber(this.tour.difficulty),
-                transportType: this.transportTypeToNumber(this.tour.transportType),
+                transportType: this.transportTypeToNumber(
+                  this.tour.transportType
+                ),
                 publishedAt: this.tour.publishedAt,
                 archivedAt: this.tour.archivedAt,
               };
               this.tourService.update(this.tourId, updatedTourDto).subscribe({
                 next: () => {
-                  console.log('Tour distance and duration updated successfully');
+                  console.log(
+                    'Tour distance and duration updated successfully'
+                  );
                 },
                 error: (err) =>
                   console.error('Failed to update tour distance/duration', err),
@@ -560,13 +589,16 @@ export class ViewTourComponent implements OnInit, AfterViewInit, OnDestroy {
               duration: 0,
               status: this.statusToNumber(this.tour.status),
               difficulty: this.difficultyToNumber(this.tour.difficulty),
-              transportType: this.transportTypeToNumber(this.tour.transportType),
+              transportType: this.transportTypeToNumber(
+                this.tour.transportType
+              ),
               publishedAt: this.tour.publishedAt,
               archivedAt: this.tour.archivedAt,
             };
             this.tourService.update(this.tourId, updatedTourDto).subscribe({
               next: () => console.log('Tour metrics reset'),
-              error: (err) => console.error('Failed to reset tour metrics', err),
+              error: (err) =>
+                console.error('Failed to reset tour metrics', err),
             });
           }
         }

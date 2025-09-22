@@ -5,6 +5,20 @@ import { AuthService } from '../../auth/auth.service';
 import { KeypointService } from '../keypoint.service';
 import { Tour, TourStatus, TransportType } from '../tour.model';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+
+interface TourRating {
+  id?: string;
+  tourId?: string;
+  rating: number;
+  comment?: string;
+  touristName?: string;
+  touristEmail?: string;
+  visitedAt?: string | Date;
+  commentedAt?: string | Date;
+  createdAt?: string | Date;
+  images?: string[];
+}
 
 @Component({
   selector: 'app-list-tours',
@@ -12,8 +26,13 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
   styleUrls: ['./list-tours.component.css'],
 })
 export class ListToursComponent {
+  showRatingsModal = false;
+  ratingsLoading = false;
+  ratingsError = '';
+  ratings: TourRating[] = [];
+  selectedTourForRatings: string | null = null;
+  activeForTour: Record<string, boolean> = {};
 
-  // Helper functions to convert string enums to numbers for backend
   private statusToNumber(status: string): number {
     switch (status) {
       case 'Draft':
@@ -125,10 +144,21 @@ export class ListToursComponent {
       next: (data) => {
         let items = (data || []) as any[];
         if (!this.isMyTours) {
-          items = items.filter((t) => t.status === 1); // only Published for public lists
+          items = items.filter((t) => t.status === 1); // Published only for public
         }
         this.tours = items;
         this.loading = false;
+
+        // NEW: for logged-in tourist, detect which tours are already active for continuation
+        this.activeForTour = {};
+        if (this.currentUserId) {
+          for (const t of this.tours) {
+            this.tourService.getActiveForTour(this.currentUserId, t.id).subscribe({
+              next: (te) => { this.activeForTour[t.id] = !!te; },
+              error: () => { this.activeForTour[t.id] = false; } // 204 also lands here as no body → treat as false
+            });
+          }
+        }
       },
       error: (err) => {
         console.error('Failed to load tours', err);
@@ -137,6 +167,28 @@ export class ListToursComponent {
       },
     });
   }
+
+  // helpers
+  isActiveFor(tourId: string): boolean {
+    return !!this.activeForTour[tourId];
+  }
+
+  onStartOrContinue(tourId: string) {
+    if (!this.currentUserId) {
+      alert('User not loaded—please log in again.');
+      return;
+    }
+    // Start is idempotent now: it will return the existing Active execution for this tour if present.
+    this.tourService.startExecution({ userId: this.currentUserId, tourId }).subscribe({
+      next: (te) => {
+        this.router.navigate(['/position-sim', tourId], {
+          state: { fromStartTour: true, te }
+        });
+      },
+      error: (e) => console.error('Failed to start/continue execution', e),
+    });
+  }
+
 
   trackById = (_: number, t: any) => t.id;
 
@@ -191,7 +243,11 @@ rateTour(tourId: string) {
     touristName: [this.userFullName ?? ''],
     touristEmail: [this.userEmail ?? ''],
     visitedAt: [todayISO],
-    commentedAt: [todayISO]
+    commentedAt: [todayISO],
+
+    imageUrl1: ['', [Validators.pattern('https?://.+')]],
+    imageUrl2: ['', [Validators.pattern('https?://.+')]],
+    imageUrl3: ['', [Validators.pattern('https?://.+')]],
   });
 
   this.selectedImages = [];
@@ -213,14 +269,18 @@ onFileChange(evt: Event) {
 submitReview() {
   if (!this.selectedTourId) return;
   this.submittingReview = true;
-  console.log('test');
+
+  const v = this.reviewForm.value;
+  const images = [v.imageUrl1, v.imageUrl2, v.imageUrl3].filter(Boolean);
+
   const payload = {
     rating: this.reviewForm.value.rating,
     comment: this.reviewForm.value.comment,
     touristName: this.reviewForm.value.touristName,
     touristEmail: this.reviewForm.value.touristEmail,
     visitedAt: this.reviewForm.value.visitedAt,
-    commentedAt: this.reviewForm.value.commentedAt
+    commentedAt: this.reviewForm.value.commentedAt,
+    images,
   };
 
   this.tourService.createReview(this.selectedTourId, payload).subscribe({
@@ -236,7 +296,34 @@ submitReview() {
   });
 }
 
+  openRatings(tourId: string) {
+    this.selectedTourForRatings = tourId;
+    this.showRatingsModal = true;
+    this.loadRatings(tourId);
+  }
 
+  closeRatingsModal() {
+    this.showRatingsModal = false;
+    this.ratings = [];
+    this.ratingsError = '';
+    this.selectedTourForRatings = null;
+  }
+
+  private loadRatings(tourId: string) { // <-- string
+    this.ratingsLoading = true;
+    this.ratingsError = '';
+
+    this.tourService.getRatings(tourId).subscribe({
+      next: (res) => {
+        this.ratings = res || [];
+        this.ratingsLoading = false;
+      },
+      error: () => {
+        this.ratingsError = 'Failed to load ratings.';
+        this.ratingsLoading = false;
+      }
+    });
+  }
 
   confirmDelete(tourId: string) {
     if (!tourId) return;
@@ -266,6 +353,8 @@ submitReview() {
       return false;
     }
   }
+
+
 
   publishTour(tour: any) {
     this.isPublishEnabled(tour.id).then((canPublish) => {
@@ -303,4 +392,20 @@ submitReview() {
       },
     });
   }
+
+  startTour(tourId: string) {
+    if (!this.currentUserId) {
+      alert('User not loaded—please log in again.');
+      return;
+    }
+    this.tourService.startExecution({ userId: this.currentUserId, tourId }).subscribe({
+      next: (te) => {
+        this.router.navigate(['/position-sim', tourId], {
+          state: { fromStartTour: true, te }
+        });
+      },
+      error: (e) => console.error('Failed to start execution', e),
+    });
+  }
+
 }

@@ -13,6 +13,6 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /out/tourservice .
 FROM alpine:3.19
 WORKDIR /app
 COPY --from=builder /out/tourservice /usr/local/bin/tourservice
-EXPOSE 8080
+EXPOSE 8080 50052
 ENV MONGO_URI=mongodb://tourmongodb:27017
 ENTRYPOINT ["tourservice"]

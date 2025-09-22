@@ -1,0 +1,29 @@
+.container {
+  padding: 20px;
+}
+
+.tour-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.tour-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.tour-img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.tour-info {
+  padding: 15px;
+}

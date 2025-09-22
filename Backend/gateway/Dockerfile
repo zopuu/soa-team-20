@@ -6,8 +6,13 @@ WORKDIR /app
 COPY gateway/go.mod gateway/go.sum ./gateway/
 COPY services/followers_service/go.mod services/followers_service/go.sum ./services/followers_service/
 COPY services/followers_service/proto ./services/followers_service/proto
+COPY services/shopping_service/go.mod services/shopping_service/go.sum ./services/shopping_service/
+COPY services/shopping_service/ ./services/shopping_service/
+COPY services/tour/go.mod services/tour/go.sum ./services/tour/
+COPY services/tour/                               ./services/tour/
 
 WORKDIR /app/gateway
+RUN go mod tidy
 RUN go mod download
 
 # Copy sources and resolve any new imports discovered after copy

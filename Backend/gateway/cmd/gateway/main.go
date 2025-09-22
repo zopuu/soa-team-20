@@ -33,6 +33,8 @@ import (
 	"github.com/zopuu/soa-team-20/Backend/gateway/internal/mw"
 	"github.com/zopuu/soa-team-20/Backend/gateway/internal/proxy"
 	followerspb "github.com/zopuu/soa-team-20/Backend/services/followers_service/proto/followerspb"
+	shoppingpb "github.com/zopuu/soa-team-20/Backend/services/shopping_service/proto/shoppingpb"
+	tourpb "github.com/zopuu/soa-team-20/Backend/services/tour/proto"
 )
 
 type ctxKey string
@@ -228,9 +230,14 @@ func main() {
 	// stakeClient := pb.NewStakeholdersClient(grpcConn)
 	// r.Get("/api/bff/profile", func(w http.ResponseWriter, r *http.Request) { ... stakeClient.GetProfile(ctx, req) ... })
 	// ----------------------------------------------------
+	// Connect to Shopping gRPC service
+	shoppingGrpcConn, err := grpc.Dial(cfg.ShopGRPCAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("failed to connect to shopping service: %v", err)
+	}
+	defer shoppingGrpcConn.Close()
 
-	
-
+	shoppingClient := shoppingpb.NewShoppingServiceClient(shoppingGrpcConn)
 	// Connect to Followers gRPC service
 	grpcConn, err := grpc.Dial(cfg.FollowersGRPCAddr, grpc.WithTransportCredentials(insecure.NewCredentials()),grpc.WithStatsHandler(otelgrpc.NewClientHandler()))
 	if err != nil {
@@ -239,6 +246,15 @@ func main() {
 	defer grpcConn.Close()
 
 	followersClient := followerspb.NewFollowersServiceClient(grpcConn)
+
+	// Connect to Tour gRPC service
+	tourGrpcConn, err := grpc.Dial(cfg.TourGRPCAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("failed to connect to tour service: %v", err)
+	}
+	defer tourGrpcConn.Close()
+
+	tourClient := tourpb.NewTourServiceClient(tourGrpcConn)
 
 	// REST -> gRPC mappings
 	r.Route("/api/followers", func(rr chi.Router) {
@@ -316,6 +332,184 @@ func main() {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
+			json.NewEncoder(w).Encode(resp)
+		})
+	})
+
+	// REST -> gRPC mappings for Shopping service
+	r.Route("/api/shopping", func(rr chi.Router) {
+		rr.Use(secure) // require JWT
+
+		// Get all tours (for shop display)
+		/*rr.Get("/tours", func(w http.ResponseWriter, r *http.Request) {
+			resp, err := shoppingClient.GetAllTours(r.Context(), &shoppingpb.Empty{})
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			json.NewEncoder(w).Encode(resp)
+		})*/
+
+		// Add item to cart
+		rr.Post("/cart/add", func(w http.ResponseWriter, r *http.Request) {
+			var req struct {
+				UserId string `json:"userId"`
+				Item   struct {
+					TourId string  `json:"tourId"`
+					Name   string  `json:"name"`
+					Price  float64 `json:"price"`
+				} `json:"item"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			resp, err := shoppingClient.AddToCart(r.Context(), &shoppingpb.AddToCartRequest{
+				UserId: req.UserId,
+				Item: &shoppingpb.OrderItem{
+					TourId: req.Item.TourId,
+					Name:   req.Item.Name,
+					Price:  req.Item.Price,
+				},
+			})
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			json.NewEncoder(w).Encode(resp)
+		})
+
+		// Remove item from cart
+		rr.Post("/cart/remove", func(w http.ResponseWriter, r *http.Request) {
+			var req struct {
+				TourId string `json:"tourId"`
+				UserId string `json:"userId"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			resp, err := shoppingClient.RemoveFromCart(r.Context(), &shoppingpb.RemoveFromCartRequest{
+				TourId: req.TourId,
+				UserId: req.UserId,
+			})
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			json.NewEncoder(w).Encode(resp)
+		})
+
+		// Get cart
+		rr.Get("/cart", func(w http.ResponseWriter, r *http.Request) {
+			userId := r.URL.Query().Get("userId")
+			if userId == "" {
+				http.Error(w, "userId is required", http.StatusBadRequest)
+				return
+			}
+
+			resp, err := shoppingClient.GetCart(r.Context(), &shoppingpb.GetCartRequest{
+				UserId: userId,
+			})
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			json.NewEncoder(w).Encode(resp)
+		})
+
+		rr.Get("/tokens", func(w http.ResponseWriter, r *http.Request) {
+			userId := r.URL.Query().Get("userId")
+			if userId == "" {
+				http.Error(w, "userId is required", http.StatusBadRequest)
+				return
+			}
+
+			resp, err := shoppingClient.GetTokens(r.Context(), &shoppingpb.GetTokensRequest{
+				UserId: userId,
+			})
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			json.NewEncoder(w).Encode(resp)
+		})
+
+		// Checkout
+		rr.Post("/checkout", func(w http.ResponseWriter, r *http.Request) {
+			var req struct {
+				UserId string `json:"userId"`
+			}
+
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				http.Error(w, "invalid request body: "+err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			log.Println("Checkout request for user:", req.UserId, "received")
+
+			resp, err := shoppingClient.Checkout(r.Context(), &shoppingpb.CheckoutRequest{
+				UserId: req.UserId,
+			})
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			json.NewEncoder(w).Encode(resp)
+		})
+
+	})
+
+	// REST -> gRPC mappings for Tour service
+	r.Route("/api/tours", func(rr chi.Router) {
+		rr.Use(secure) // require JWT auth
+
+		rr.Post("/", func(w http.ResponseWriter, r *http.Request) {
+			var req struct {
+				AuthorId      string   `json:"authorId"`
+				Title         string   `json:"title"`
+				Description   string   `json:"description"`
+				Difficulty    int32    `json:"difficulty"`
+				Tags          []string `json:"tags"`
+				TransportType int32    `json:"transportType"`
+			}
+
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			resp, err := tourClient.CreateTour(r.Context(), &tourpb.CreateTourRequest{
+				AuthorId:      req.AuthorId,
+				Title:         req.Title,
+				Description:   req.Description,
+				Difficulty:    tourpb.TourDifficulty(req.Difficulty),
+				Tags:          req.Tags,
+				TransportType: tourpb.TransportType(req.TransportType),
+			})
+
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			json.NewEncoder(w).Encode(resp)
+		})
+
+		rr.Delete("/{id}", func(w http.ResponseWriter, r *http.Request) {
+			id := chi.URLParam(r, "id")
+
+			resp, err := tourClient.DeleteTour(r.Context(), &tourpb.DeleteTourRequest{Id: id})
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
 			json.NewEncoder(w).Encode(resp)
 		})
 	})

@@ -96,7 +96,8 @@ func (repo *BlogRepository) GetAllByUser(userID string) ([]model.Blog, error) {
 		return nil, err
 	}
 	defer cursor.Close(context.TODO())
-
+	println("Cursor obtained for userID:", userID)
+	println("NUmber of documents found:", cursor.RemainingBatchLength())
 	var blogs []model.Blog
 	for cursor.Next(context.TODO()) {
 		var blog model.Blog

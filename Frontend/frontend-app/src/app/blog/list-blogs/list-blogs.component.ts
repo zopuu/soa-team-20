@@ -32,20 +32,21 @@ export class ListBlogsComponent implements OnChanges {
   // Map blogId to new comment text
   newCommentText: { [blogId: string]: string } = {};
 
-  constructor(private blogService: BlogService,
+  constructor(
+    private blogService: BlogService,
     private commentService: CommentService,
     private likeService: LikeService,
     private authService: AuthService,
-    private followersService: FollowersService,
+    private followersService: FollowersService
   ) {}
 
   ngOnInit() {
-  this.authService.whoAmI().subscribe(user => {
-    this.userId = user.id.toString(); // This is the logged-in user's ID
-    // Use currentUserId as needed
-    this.load();
-  });
-}
+    this.authService.whoAmI().subscribe((user) => {
+      this.userId = user.id.toString(); // This is the logged-in user's ID
+      // Use currentUserId as needed
+      this.load();
+    });
+  }
   ngOnChanges(_: SimpleChanges): void {
     this.load();
   }
@@ -67,51 +68,40 @@ export class ListBlogsComponent implements OnChanges {
   private load(): void {
     this.loading = true;
     this.error = '';
-    if(!this.userId) return;
-    this.followersService.getFollowees(this.userId.toString()).subscribe({ next: (result) => {
-      console.log("Followees result: ", result);
-      if(result.user_ids && Array.isArray(result.user_ids)){
-        
-        console.log("Followees including self: ", result.user_ids);
-        result.user_ids.forEach((f: any) => {
-          this.blogService.getAllByUser(f.toString()).subscribe(followeeBlogs => {
-            this.blogs = this.blogs.concat(followeeBlogs || []);
+    if (!this.userId) return;
+    this.followersService.getFollowees(this.userId.toString()).subscribe({
+      next: (result) => {
+        console.log('Followees result: ', result);
+        if (result.user_ids && Array.isArray(result.user_ids)) {
+          console.log('Followees including self: ', result.user_ids);
+          result.user_ids.forEach((f: any) => {
+            this.blogService
+              .getAllByUser(f.toString())
+              .subscribe((followeeBlogs) => {
+                this.blogs = this.blogs.concat(followeeBlogs || []);
+              });
           });
-          
-
-          
-           
-          
-        });
-
-        
-
-        
-      }
-        if(this.userId){
-        this.blogService.getAllByUser(this.userId).subscribe(followeeBlogs => {
+        }
+        if (this.userId) {
+          this.blogService
+            .getAllByUser(this.userId)
+            .subscribe((followeeBlogs) => {
               this.blogs = this.blogs.concat(followeeBlogs || []);
-              this.usersBlogsNumber = followeeBlogs.length;
-              
+              this.usersBlogsNumber = followeeBlogs?.length;
+
               // Fetch comments for each blog
-            this.blogs.forEach(blog => {
-              this.loadComments(blog.id);
-              this.loadLikes(blog.id);});
-            }
-          );
-             
-            }
+              this.blogs.forEach((blog) => {
+                this.loadComments(blog.id);
+                this.loadLikes(blog.id);
+              });
+            });
+        }
         this.loading = false;
-        
-    },
-    error: (err) => {
+      },
+      error: (err) => {
         console.error('Failed to load followees', err);
-      }
-  }
-    
-    );
-    
-  
+      },
+    });
 
     /*const req$ = this.userId
       ? this.blogService.getAllByUser(this.userId)
@@ -135,61 +125,68 @@ export class ListBlogsComponent implements OnChanges {
     });*/
   }
   loadComments(blogId: string) {
-    console.log("Loading comments for blog:", blogId);
+    console.log('Loading comments for blog:', blogId);
     this.commentService.getCommentsByBlog(blogId).subscribe({
       next: (comments) => {
         this.blogComments[blogId] = comments || [];
       },
       error: () => {
         this.blogComments[blogId] = [];
-      }
+      },
     });
   }
 
   loadLikes(blogId: string) {
-    console.log("Loading likes for blog:", blogId);
+    console.log('Loading likes for blog:', blogId);
     this.likeService.getLikesByBlog(blogId).subscribe({
       next: (likes) => {
         this.blogLikes[blogId] = likes || [];
       },
       error: () => {
         this.blogLikes[blogId] = [];
-      }
+      },
     });
-    console.log("Blog likes:", this.blogLikes);
+    console.log('Blog likes:', this.blogLikes);
   }
-  
-  hasLiked(blog: Blog): boolean {
-  const likes = this.blogLikes[blog.id] || [];
-  return likes.some(like => like.userId === this.userId);
-}
 
-toggleLike(blog: Blog) {
-  if (this.hasLiked(blog) && this.userId) {
-    // Unlike
-    this.likeService.removeLike(blog.id, this.userId).subscribe({
-      next: () => {
-        this.blogLikes[blog.id] = (this.blogLikes[blog.id] || []).filter(like => like.userId !== this.userId);
-      }
-    });
-  } else if(this.userId) {
-    // Like
-    this.likeService.createLike({ userId: this.userId, blogId: blog.id }).subscribe({
-      next: (newLike) => {
-        this.blogLikes[blog.id] = [...(this.blogLikes[blog.id] || []), newLike];
-      }
-    });
+  hasLiked(blog: Blog): boolean {
+    const likes = this.blogLikes[blog.id] || [];
+    return likes.some((like) => like.userId === this.userId);
   }
-}
-delete(blog: Blog) {
+
+  toggleLike(blog: Blog) {
+    if (this.hasLiked(blog) && this.userId) {
+      // Unlike
+      this.likeService.removeLike(blog.id, this.userId).subscribe({
+        next: () => {
+          this.blogLikes[blog.id] = (this.blogLikes[blog.id] || []).filter(
+            (like) => like.userId !== this.userId
+          );
+        },
+      });
+    } else if (this.userId) {
+      // Like
+      this.likeService
+        .createLike({ userId: this.userId, blogId: blog.id })
+        .subscribe({
+          next: (newLike) => {
+            this.blogLikes[blog.id] = [
+              ...(this.blogLikes[blog.id] || []),
+              newLike,
+            ];
+          },
+        });
+    }
+  }
+  delete(blog: Blog) {
     this.blogService.delete(blog.id).subscribe({
-      next: () => { 
-        console.log("Deleted blog:", blog.id);
-        this.blogs = this.blogs.filter(b => b.id !== blog.id);
+      next: () => {
+        console.log('Deleted blog:', blog.id);
+        this.blogs = this.blogs.filter((b) => b.id !== blog.id);
       },
       error: (err) => {
-        console.error("Failed to delete blog:", err);
-      }
+        console.error('Failed to delete blog:', err);
+      },
     });
   }
   addComment(blog: Blog) {
@@ -201,16 +198,14 @@ delete(blog: Blog) {
       text,
       // userId: ... // set current user id here
     };
-    console.log("Adding comment:", commentPayload);
+    console.log('Adding comment:', commentPayload);
     this.commentService.addComment(commentPayload).subscribe({
       next: () => {
         this.newCommentText[blog.id] = '';
         this.loadComments(blog.id); // Refresh comments
-      }
+      },
     });
   }
 
   trackById = (_: number, b: Blog) => b.id;
 }
-  
-      

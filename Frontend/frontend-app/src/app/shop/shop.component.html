@@ -1,0 +1,84 @@
+<div class="shop-container">
+  <!-- Header -->
+  <header class="shop-header">
+    <h1>Tour Shop</h1>
+    <button class="cart-btn" (click)="toggleCart()">
+      🛒 My Cart ({{ cart.length }})
+    </button>
+  </header>
+
+  <!-- Tours Grid -->
+  <div class="tours-grid">
+  <div *ngFor="let tour of tours" class="tour-card">
+    <div
+  class="image-container"
+  *ngIf="isInMyTours(tour) && (tour.keypoints?.length ?? 0) > 0; else singleImage"
+>
+  <button class="nav-btn left" (click)="prevImage(tour)">&#8592;</button>
+  <img [src]="getCurrentImage(tour)" alt="{{ tour.title }}" class="tour-img" />
+  <button class="nav-btn right" (click)="nextImage(tour)">&#8594;</button>
+</div>
+
+<ng-template #singleImage>
+  <img 
+    [src]="getFirstKeypointImage(tour)" 
+    alt="{{ tour.title }}" 
+    class="tour-img" 
+  />
+</ng-template>
+    <div class="tour-content">
+      <h2>{{ tour.title }}</h2>
+      <p class="description">{{ tour.description }}</p>
+      <p><strong>Length:</strong> {{ tour.length }} km</p>
+      <p><strong>Duration:</strong> {{ tour.duration }} hrs</p>
+      <p><strong>First keypoint:</strong> {{ tour.firstKeypoint }}</p>
+      <p class="price"><strong>Price:</strong> \${{ tour.price }}</p>
+
+      <!-- Reviews Section -->
+      <div class="reviews">
+        <h3>Reviews ({{ tour.recensions?.length || 0 }})</h3>
+        <div *ngIf="(tour?.recensions?.length ?? 0) > 0; else noReviews">
+          <div *ngFor="let review of tour.recensions" class="review-item">
+            <p>
+              <strong>{{ review.touristName }}</strong> 
+              <span class="rating">⭐ {{ review.rating }}/5</span>
+            </p>
+            <p>{{ review.comment }}</p>
+            <small>
+              Visited: {{ review.visitedAt | date:'mediumDate' }} · 
+              Commented: {{ review.commentedAt | date:'short' }}
+            </small>
+          </div>
+        </div>
+        <ng-template #noReviews>
+          <p>No reviews yet.</p>
+        </ng-template>
+      </div>
+
+      <button 
+        (click)="addToCart(tour)" 
+        [disabled]="isInMyTours(tour)"
+        [ngClass]="{ 'disabled-btn': isInMyTours(tour) }">
+        Add to Cart
+        </button>
+      <button (click)="viewTour(tour)">View Tour</button>
+    </div>
+  </div>
+</div>
+
+  <!-- Cart Sidebar -->
+  <div class="cart-sidebar" *ngIf="cartOpen">
+    <h2>My Cart</h2>
+    <ul>
+      <li *ngFor="let item of cart">
+        {{ item.name }} - \${{ item.price }}
+        <button class="remove-btn" (click)="removeFromCart(item)">Removes</button>
+        <button class="remove-btn" (click)="remove()">Removessss</button>
+      </li>
+    </ul>
+    <div class="cart-total">
+      <strong>Total:</strong> \${{ getTotalPrice() }}
+    </div>
+    <button class="checkout-btn" (click)="checkout()">Checkout</button>
+  </div>
+

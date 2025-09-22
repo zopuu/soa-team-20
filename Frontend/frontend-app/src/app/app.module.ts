@@ -19,6 +19,8 @@ import { PositionSimComponent } from './tour/position-sim/position-sim.component
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ListUsersComponent } from './users/list-users/list-users.component';
+import { ShopComponent } from './shop/shop.component';
+import { MyToursComponent } from './shop/my-tours/my-tours.component';
 
 @NgModule({
   declarations: [
@@ -30,6 +32,8 @@ import { ListUsersComponent } from './users/list-users/list-users.component';
     AdminPageComponent,
     ForbiddenComponent,
     PositionSimComponent,
+    ShopComponent,
+    MyToursComponent
   ],
   imports: [
     BrowserModule,

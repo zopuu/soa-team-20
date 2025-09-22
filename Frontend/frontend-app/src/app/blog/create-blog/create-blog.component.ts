@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { BlogService } from '../blog.service';
 import { AuthService } from 'src/app/auth/auth.service';
 import { BlogDto } from '../blog.dto';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-create-blog',
@@ -31,25 +32,26 @@ export class CreateBlogComponent {
     }
   }
 
-  onSubmit(): void {
-    if (this.blogForm.valid) {
+  async onSubmit(): Promise<void> {
+  if (this.blogForm.valid) {
+    try {
+      const user = await firstValueFrom(this.auth.whoAmI());
+
       const newBlog: BlogDto = {
-        userId: '1',
+        userId: user.id.toString(),
         title: this.blogForm.value.title,
         description: this.blogForm.value.description,
       };
 
-      this.blogService.create(newBlog, this.selectedImages).subscribe({
-        next: () => {
-          console.log('Blog created successfully!');
-          console.log('selected images:', this.selectedImages);
-          this.blogForm.reset();
-          this.selectedImages = [];
-        },
-        error: (err) => {
-          console.error('Error creating blog:', err);
-        },
-      });
+      await firstValueFrom(this.blogService.create(newBlog, this.selectedImages));
+
+      console.log('Blog created successfully!');
+      console.log('selected images:', this.selectedImages);
+      this.blogForm.reset();
+      this.selectedImages = [];
+    } catch (err) {
+      console.error('Error creating blog:', err);
     }
   }
+}
 }

@@ -14,6 +14,8 @@ import { ListToursComponent } from './tour/list-tours/list-tours.component';
 import { ViewTourComponent } from './tour/view-tour/view-tour.component';
 import { PositionSimComponent } from './tour/position-sim/position-sim.component';
 import { ListUsersComponent } from './users/list-users/list-users.component';
+import { ShopComponent } from './shop/shop.component';
+import { MyToursComponent } from './shop/my-tours/my-tours.component';
 
 const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -31,12 +33,15 @@ const routes: Routes = [
   { path: 'users/:id/create-tour', component: CreateTourComponent },
   { path: 'tours/:id/create-keypoint', component: CreateKeypointComponent },
   { path: 'tours', component: ListToursComponent },
+  { path: 'shop', component: ShopComponent },
+  { path: 'my-tours', component: MyToursComponent },
   { path: 'users/:id/tours', component: ListToursComponent },
   { path: 'tours/view/:id', component: ViewTourComponent },
   { path: 'position-sim', component: PositionSimComponent},
+  { path: 'position-sim/:tourId', component: PositionSimComponent },
 
   { path: '**', redirectTo: '' }, // Redirect any unknown paths to home,
-  
+
 ];
 
 @NgModule({
