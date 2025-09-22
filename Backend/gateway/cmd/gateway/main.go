@@ -5,11 +5,20 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"time"
 	"os"
+	"time"
 
 	"go.uber.org/zap"
-    "go.uber.org/zap/zapcore"
+	"go.uber.org/zap/zapcore"
+
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/semconv/v1.27.0"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 
 	tb "github.com/didip/tollbooth/v7"
 	tbchi "github.com/didip/tollbooth_chi"
@@ -17,8 +26,8 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 
 	"github.com/zopuu/soa-team-20/Backend/gateway/internal/config"
 	"github.com/zopuu/soa-team-20/Backend/gateway/internal/mw"
@@ -49,9 +58,40 @@ func grpcCtxWithTrace(r *http.Request) context.Context {
     )
     return metadata.NewOutgoingContext(r.Context(), md)
 }
+func initTracer(ctx context.Context) (func(context.Context) error, error) {
+    exp, err := otlptracehttp.New(ctx,
+        otlptracehttp.WithEndpoint("otel-collector:4318"),
+        otlptracehttp.WithInsecure(),
+    )
+    if err != nil { return nil, err }
+
+    tp := sdktrace.NewTracerProvider(
+        sdktrace.WithBatcher(exp, sdktrace.WithBatchTimeout(2*time.Second)),
+        sdktrace.WithResource(resource.NewWithAttributes(
+            semconv.SchemaURL,
+            semconv.ServiceName("gateway"),
+            semconv.ServiceVersion("1.0.0"),
+        )),
+    )
+    otel.SetTracerProvider(tp)
+
+    // W3C propagator (traceparent) + baggage
+    otel.SetTextMapPropagator(
+        propagation.NewCompositeTextMapPropagator(
+            propagation.TraceContext{}, propagation.Baggage{}),
+    )
+    return tp.Shutdown, nil
+}
 
 func main() {
 	cfg := config.New()
+
+	ctx := context.Background()
+	shutdown, err := initTracer(ctx)
+	if err != nil {
+		log.Fatalf("failed to initialize tracer: %v", err)
+	}
+	defer func() { _ = shutdown(context.Background()) }()
 
 	// ---- logger ----
 	encCfg := zap.NewProductionEncoderConfig()
@@ -73,6 +113,7 @@ func main() {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Timeout(40 * time.Second))
 	r.Use(mw.CORS(cfg.CorsOrigins).Handler)
+	r.Use(otelhttp.NewMiddleware("gateway"))
 
 	
 
@@ -157,6 +198,7 @@ func main() {
 		rr.Use(mw.AuthOptional(jwtCfg)) // parse token if present, but don't require
 		rr.Handle("/*", withCorrHeaders(authProxy))
 	})
+	authProxy.Transport = otelhttp.NewTransport(authProxy.Transport)
 
 	// Everything else requires JWT
 	secure := func(h http.Handler) http.Handler {
@@ -190,7 +232,7 @@ func main() {
 	
 
 	// Connect to Followers gRPC service
-	grpcConn, err := grpc.Dial(cfg.FollowersGRPCAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	grpcConn, err := grpc.Dial(cfg.FollowersGRPCAddr, grpc.WithTransportCredentials(insecure.NewCredentials()),grpc.WithStatsHandler(otelgrpc.NewClientHandler()))
 	if err != nil {
 		log.Fatalf("failed to connect to followers service: %v", err)
 	}

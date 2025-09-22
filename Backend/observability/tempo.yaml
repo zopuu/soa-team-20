@@ -20,7 +20,9 @@ ingester:
   max_block_duration: 5m
 
 compactor:
-  working_directory: /tmp/tempo
+  ring:
+    kvstore:
+      store: inmemory
   compaction:
     block_retention: 24h
 
@@ -30,13 +32,10 @@ storage:
     local:
       path: /tmp/tempo
 
+querier:
+  frontend_worker:
+    frontend_address: 127.0.0.1:9095
+
 query_frontend:
-  # enable the endpoints Grafana uses for search/tag values
-  search:
-    query_backend: 0
-  trace_by_id:
-    enabled: true
-  tag_values:
-    enabled: true
-  tag_names:
-    enabled: true
+  # keep this block present but empty (no 'enabled', no tag_* or query_backend)
+  {}
