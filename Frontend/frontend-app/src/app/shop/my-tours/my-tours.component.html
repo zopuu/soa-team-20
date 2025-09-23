@@ -1,24 +1,61 @@
-<div class="container">
-  <h2>My Purchased Tours</h2>
+<div class="shop-container">
+  <!-- Header -->
+  
 
-  <div *ngIf="loading">Loading your tours...</div>
-  <div *ngIf="!loading && myTours.length === 0">You haven’t purchased any tours yet.</div>
+  <!-- Tours Grid -->
+  <div class="tours-grid">
+  <div *ngFor="let tour of myTours" class="tour-card">
+    <div
+  class="image-container"
+  *ngIf="isInMyTours(tour) && (tour.keypoints?.length ?? 0) > 0; else singleImage"
+>
+  <button class="nav-btn left" (click)="prevImage(tour)">&#8592;</button>
+  <img [src]="getCurrentImage(tour)" alt="{{ tour.title }}" class="tour-img" />
+  <button class="nav-btn right" (click)="nextImage(tour)">&#8594;</button>
+</div>
 
-  <div class="tour-list" *ngIf="myTours.length > 0">
-    <div class="tour-card" *ngFor="let tour of myTours">
-      <img [src]="tour.imageUrl" alt="{{ tour.title }}" class="tour-img" />
-      <div class="tour-info">
-        <h3>{{ tour.title }}</h3>
-        <p>{{ tour.description }}</p>
-        <p><strong>Duration:</strong> {{ tour.duration }} days</p>
-        <p><strong>Length:</strong> {{ tour.length }} km</p>
-        <p><strong>Price:</strong> {{ tour.price | currency }}</p>
-        <p><strong>First keypoint:</strong> {{ tour.firstKeypoint }}</p>
-        <p *ngIf="tour.recensions.length > 0">
-          <strong>Recensions:</strong> {{ tour.recensions[0] }}
-        </p>
+<ng-template #singleImage>
+  <img 
+    [src]="getFirstKeypointImage(tour)" 
+    alt="{{ tour.title }}" 
+    class="tour-img" 
+  />
+</ng-template>
+    <div class="tour-content">
+      <h2>{{ tour.title }}</h2>
+      <p class="description">{{ tour.description }}</p>
+      <p><strong>Length:</strong> {{ tour.length }} km</p>
+      <p><strong>Duration:</strong> {{ tour.duration }} hrs</p>
+      <p><strong>First keypoint:</strong> {{ tour.firstKeypoint }}</p>
+      <p class="price"><strong>Price:</strong> \${{ tour.price }}</p>
+
+      <!-- Reviews Section -->
+      <div class="reviews">
+        <h3>Reviews ({{ tour.recensions?.length || 0 }})</h3>
+        <div *ngIf="(tour?.recensions?.length ?? 0) > 0; else noReviews">
+          <div *ngFor="let review of tour.recensions" class="review-item">
+            <p>
+              <strong>{{ review.touristName }}</strong> 
+              <span class="rating">⭐ {{ review.rating }}/5</span>
+            </p>
+            <p>{{ review.comment }}</p>
+            <small>
+              Visited: {{ review.visitedAt | date:'mediumDate' }} · 
+              Commented: {{ review.commentedAt | date:'short' }}
+            </small>
+          </div>
+        </div>
+        <ng-template #noReviews>
+          <p>No reviews yet.</p>
+        </ng-template>
       </div>
-      <button (click)="viewTour(tour.id)">View Tour</button>
+
+      
+      <button (click)="viewTour(tour)">View Tour</button>
     </div>
   </div>
 </div>
+
+ 
+  
+
