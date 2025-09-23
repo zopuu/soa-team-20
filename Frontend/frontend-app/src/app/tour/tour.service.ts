@@ -115,4 +115,12 @@ export class TourService {
       tourId
     });
   }
+
+  purchaseAndStart(tourId: string, userId: string) {
+    return this.http.post('/api/orchestrations/purchase-start', {
+      userId, // however you expose the logged-in user
+      tourId
+    });
+  }
+
 }

@@ -173,6 +173,23 @@ export class ListToursComponent {
     return !!this.activeForTour[tourId];
   }
 
+  purchaseAndStart(t: any) {
+    // assumes you have currentUserId (from auth) available
+    this.loading = true;
+    this.tourService.purchaseAndStart(t.id, this.userId!).subscribe({
+      next: (res) => {
+        this.loading = false;
+        // Optionally refresh execution state so the “Continue tour” button shows
+        this.onStartOrContinue(t.id);
+      },
+      error: (err) => {
+        this.loading = false;
+        alert('Purchase failed: ' + (err?.error?.message ?? 'Unknown error'));
+      }
+    });
+  }
+
+
   onStartOrContinue(tourId: string) {
     if (!this.currentUserId) {
       alert('User not loaded—please log in again.');

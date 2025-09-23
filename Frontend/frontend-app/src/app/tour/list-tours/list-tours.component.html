@@ -34,7 +34,14 @@
           >
             {{ isActiveFor(t.id) ? 'Continue tour' : 'Start tour' }}
           </button>
-
+          <button
+            type="button"
+            class="small primary"
+            *ngIf="currentUserRole === 'Tourist'"
+            (click)="purchaseAndStart(t)"
+          >
+            Buy & Start
+          </button>
         </div>
       </ng-container>
 
