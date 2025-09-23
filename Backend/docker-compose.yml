@@ -246,16 +246,17 @@ services:
         image: grafana/tempo:2.6.0
         command: ["-config.file=/etc/tempo.yaml"]
         volumes:
-        - ./observability/tempo.yaml:/etc/tempo.yaml:ro
+            - ./observability/tempo.yaml:/etc/tempo.yaml:ro
         ports: ["3200:3200"] # Tempo HTTP API
         networks:
             - backend
     otel-collector:
-        image: otel/opentelemetry-collector:0.101.0
+        image: otel/opentelemetry-collector-contrib:0.101.0
         command: ["--config=/etc/otelcol/config.yaml"]
         volumes:
         - ./observability/otelcol-config.yaml:/etc/otelcol/config.yaml:ro
-        ports: ["4317:4317","4318:4318"]   # OTLP gRPC/HTTP
+        - /var/run/docker.sock:/var/run/docker.sock:ro
+        ports: ["4317:4317","4318:4318","9464:9464"]   # OTLP gRPC/HTTP and Prometheus metrics
         depends_on: [tempo]
         networks:
             - backend
@@ -289,27 +290,6 @@ services:
         - "9100:9100"
         networks:
         - backend
-    cadvisor:
-        image: gcr.io/cadvisor/cadvisor:v0.49.1
-        container_name: cadvisor
-        ports:
-        - "8084:8080"
-        volumes:
-        - /:/rootfs:ro
-        - /var/run:/var/run:ro
-        - /sys:/sys:ro
-        - /var/lib/docker/:/var/lib/docker:ro
-        - /dev/disk/:/dev/disk:ro
-        - /var/run/docker.sock:/var/run/docker.sock
-        privileged: true
-        command:
-            - "--docker_only=true"            # force Docker runtime
-            - "--housekeeping_interval=10s"   # more frequent updates
-        networks:
-        - backend
-
-
-
 
 volumes:
     auth_data:

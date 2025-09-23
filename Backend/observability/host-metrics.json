@@ -1,0 +1,105 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 1,
+  "graphTooltip": 0,
+  "iteration": 2,
+  "links": [],
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Host CPU (%)",
+      "id": 10,
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "percent" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull"] } },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{instance}}",
+          "expr": "100 * (1 - (sum by (instance) (rate(node_cpu_seconds_total{job=~\"$node_job\", mode=\"idle\"}[5m])) / sum by (instance) (rate(node_cpu_seconds_total{job=~\"$node_job\"}[5m]))))"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Host Memory Used (bytes)",
+      "id": 11,
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull"] } },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{instance}} used",
+          "expr": "node_memory_MemTotal_bytes{job=~\"$node_job\"} - node_memory_MemAvailable_bytes{job=~\"$node_job\"}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Filesystem Used (%)",
+      "id": 12,
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 9 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "percent" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull"] } },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{instance}} {{mountpoint}}",
+          "expr": "100 * (1 - (node_filesystem_avail_bytes{job=~\"$node_job\", fstype!~\"tmpfs|overlay\", mountpoint!~\"/(run|var/lib/docker).*\"} / node_filesystem_size_bytes{job=~\"$node_job\", fstype!~\"tmpfs|overlay\", mountpoint!~\"/(run|var/lib/docker).*\"}))"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Host Network Throughput (bytes/s)",
+      "id": 13,
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 9 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "Bps" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull"] } },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{instance}} RX",
+          "expr": "sum by (instance) (rate(node_network_receive_bytes_total{job=~\"$node_job\", device!~\"lo\"}[5m]))"
+        },
+        {
+          "refId": "B",
+          "legendFormat": "{{instance}} TX",
+          "expr": "sum by (instance) (rate(node_network_transmit_bytes_total{job=~\"$node_job\", device!~\"lo\"}[5m]))"
+        }
+      ]
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": ["host", "node-exporter"],
+  "templating": {
+    "list": [
+      { "type": "datasource", "name": "DS_PROMETHEUS", "query": "prometheus" },
+      {
+        "type": "query",
+        "name": "node_job",
+        "label": "node-exporter job",
+        "query": "label_values(node_cpu_seconds_total, job)",
+        "current": { "selected": true, "text": "node-exporter", "value": "node-exporter" },
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*",
+        "refresh": 2
+      }
+    ]
+  },
+  "time": { "from": "now-1h", "to": "now" },
+  "timezone": "",
+  "title": "Host – CPU / Memory / Filesystem / Network (node-exporter, refined)",
+  "uid": "host-nodeexp-refined",
+  "version": 2,
+  "weekStart": ""
+}

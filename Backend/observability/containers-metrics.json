@@ -1,0 +1,92 @@
+{
+  "title": "Containers – CPU / Memory / FS I/O / Network (OTel, no-vars)",
+  "uid": "containers-otel-novars",
+  "tags": ["containers","otel","docker_stats"],
+  "timezone": "",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "time": {"from":"now-1h","to":"now"},
+  "templating": {
+    "list": [
+      { "type": "datasource", "name": "DS_PROMETHEUS", "query": "prometheus" }
+    ]
+  },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Container CPU (cores)",
+      "gridPos": {"h":9,"w":12,"x":0,"y":0},
+      "datasource": {"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+      "fieldConfig": {"defaults":{"unit":"cores"},"overrides":[]},
+      "options":{"legend":{"displayMode":"table","placement":"right","calcs":["lastNotNull"],"sortBy":"Last *","sort":"desc"}},
+      "targets":[
+        {
+          "refId":"A",
+          "legendFormat":"{{container_name}}",
+          "expr":"sum by (container_name) (rate(container_cpu_usage_nanoseconds_total{container_name!~\".*(prometheus|grafana|loki|promtail|otel|cadvisor|node-exporter).*\"}[5m])) / 1e9"
+        }
+      ]
+    },
+    {
+      "type":"timeseries",
+      "title":"Container Memory Used (bytes)",
+      "gridPos":{"h":9,"w":12,"x":12,"y":0},
+      "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+      "fieldConfig":{"defaults":{"unit":"bytes"},"overrides":[]},
+      "options":{"legend":{"displayMode":"table","placement":"right","calcs":["lastNotNull"],"sortBy":"Last *","sort":"desc"}},
+      "targets":[
+        {
+          "refId":"A",
+          "legendFormat":"{{container_name}}",
+          "expr":"max by (container_name) (container_memory_usage_total_bytes{container_name!~\".*(prometheus|grafana|loki|promtail|otel|cadvisor|node-exporter).*\"})"
+        }
+      ]
+    },
+    {
+      "type":"timeseries",
+      "title":"Container Memory (% of limit)",
+      "gridPos":{"h":8,"w":12,"x":0,"y":9},
+      "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+      "fieldConfig":{"defaults":{"unit":"percent"},"overrides":[]},
+      "options":{"legend":{"displayMode":"table","placement":"right","calcs":["lastNotNull"],"sortBy":"Last *","sort":"desc"}},
+      "targets":[
+        {
+          "refId":"A",
+          "legendFormat":"{{container_name}}",
+          "expr":"max by (container_name) (container_memory_percent_ratio{container_name!~\".*(prometheus|grafana|loki|promtail|otel|cadvisor|node-exporter).*\"}) * 100"
+        }
+      ]
+    },
+    {
+      "type":"timeseries",
+      "title":"Container Network (bytes/s)",
+      "gridPos":{"h":8,"w":12,"x":12,"y":9},
+      "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+      "fieldConfig":{"defaults":{"unit":"Bps"},"overrides":[]},
+      "options":{"legend":{"displayMode":"table","placement":"right","calcs":["lastNotNull"],"sortBy":"Last *","sort":"desc"}},
+      "targets":[
+        {
+          "refId":"A",
+          "legendFormat":"{{container_name}}",
+          "expr":"sum by (container_name) ( rate(container_network_io_usage_rx_bytes_total{container_name!~\".*(prometheus|grafana|loki|promtail|otel|cadvisor|node-exporter).*\"}[5m]) + rate(container_network_io_usage_tx_bytes_total{container_name!~\".*(prometheus|grafana|loki|promtail|otel|cadvisor|node-exporter).*\"}[5m]) )"
+        }
+      ]
+    },
+    {
+      "type":"timeseries",
+      "title":"Container Disk I/O (bytes/s by operation)",
+      "gridPos":{"h":8,"w":24,"x":0,"y":17},
+      "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+      "fieldConfig":{"defaults":{"unit":"Bps"},"overrides":[]},
+      "options":{"legend":{"displayMode":"table","placement":"right","calcs":["lastNotNull"],"sortBy":"Last *","sort":"desc"}},
+      "targets":[
+        {
+          "refId":"A",
+          "legendFormat":"{{container_name}} {{operation}}",
+          "expr":"sum by (container_name, operation) (rate(container_blockio_io_service_bytes_recursive_total{container_name!~\".*(prometheus|grafana|loki|promtail|otel|cadvisor|node-exporter).*\"}[5m]))"
+        }
+      ]
+    }
+  ]
+}
